@@ -1,0 +1,14 @@
+{
+  "CoreAutocrlf": "false",
+  "Origin": "https://github.com/jessenlawson-cell/HOMEFORGE.git",
+  "Node": "v24.20.0",
+  "Npm": "11.19.0",
+  "Git": "git version 2.55.0.windows.5",
+  "Timezone": "America/Toronto",
+  "Baseline": "d68cadf703578f2cd3a7c77f820e18d342580c32",
+  "Tag": "d68cadf703578f2cd3a7c77f820e18d342580c32",
+  "Branch": "main",
+  "Date": "2026-10-04",
+  "Path": "C:\\DEVELOPMENT\\HOMEFORGE",
+  "Upstream": "https://github.com/laanlabs/openPlan3D.git"
+}

@@ -1,0 +1,290 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test --project=webkit --workers=2 --max-failures=5 --global-timeout=1800000
+
+[WebServer] (node:27808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 393 tests using 2 workers
+
+(node:19668) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok   2 [webkit] › tests\browser\accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry (8.0s)
+  ok   1 [webkit] › tests\browser\3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo (9.8s)
+  ok   4 [webkit] › tests\browser\ai-panel-localization.spec.ts:3:1 › Portuguese AI choices preserve provider prompt values without sending an image (5.3s)
+  ok   3 [webkit] › tests\browser\accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry (7.6s)
+  ok   6 [webkit] › tests\browser\accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry (7.1s)
+  ok   7 [webkit] › tests\browser\accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry (7.2s)
+[WebServer] 
+[WebServer] [404] POST /api/openai-proxy
+  ok   5 [webkit] › tests\browser\ai-provider.spec.ts:24:3 › direct AI provider settings and camera render work at 1440px without hosting requests (15.5s)
+  ok   8 [webkit] › tests\browser\accessory-drag-undo.spec.ts:6:3 › entourage-resize drag has one undo entry and restores geometry (7.2s)
+  ok  10 [webkit] › tests\browser\alignment.spec.ts:6:3 › en: Align Left respects geometry and locks at 1440px (6.6s)
+[WebServer] 
+[WebServer] [404] POST /api/openai-proxy
+  ok   9 [webkit] › tests\browser\ai-provider.spec.ts:24:3 › direct AI provider settings and camera render work at 390px without hosting requests (17.8s)
+  ok  11 [webkit] › tests\browser\alignment.spec.ts:6:3 › en: Distribute Horizontally respects geometry and locks at 1440px (7.1s)
+  ok  13 [webkit] › tests\browser\alignment.spec.ts:6:3 › en: Align Left respects geometry and locks at 390px (4.1s)
+  ok  12 [webkit] › tests\browser\annotation-alignment.spec.ts:4:3 › Align Left aligns saved annotations at 1440px (8.9s)
+  ok  14 [webkit] › tests\browser\alignment.spec.ts:6:3 › en: Distribute Horizontally respects geometry and locks at 390px (4.4s)
+  ok  15 [webkit] › tests\browser\annotation-alignment.spec.ts:4:3 › Distribute Horizontally aligns saved annotations at 1440px (8.7s)
+  ok  16 [webkit] › tests\browser\alignment.spec.ts:6:3 › pt: Align Left respects geometry and locks at 1440px (6.8s)
+  ok  17 [webkit] › tests\browser\annotation-alignment.spec.ts:4:3 › Align Left aligns saved annotations at 390px (5.0s)
+  ok  18 [webkit] › tests\browser\alignment.spec.ts:6:3 › pt: Distribute Horizontally respects geometry and locks at 1440px (7.1s)
+  ok  19 [webkit] › tests\browser\annotation-alignment.spec.ts:4:3 › Distribute Horizontally aligns saved annotations at 390px (5.4s)
+  ok  20 [webkit] › tests\browser\alignment.spec.ts:6:3 › pt: Align Left respects geometry and locks at 390px (4.4s)
+  ok  21 [webkit] › tests\browser\annotation-clipboard.spec.ts:4:3 › textAnnotations clipboard survives deletion and supports independent repeat pastes (5.3s)
+  ok  22 [webkit] › tests\browser\alignment.spec.ts:6:3 › pt: Distribute Horizontally respects geometry and locks at 390px (4.3s)
+  ok  23 [webkit] › tests\browser\annotation-clipboard.spec.ts:4:3 › measurements clipboard survives deletion and supports independent repeat pastes (5.7s)
+  ok  25 [webkit] › tests\browser\annotation-clipboard.spec.ts:4:3 › annotations clipboard survives deletion and supports independent repeat pastes (5.0s)
+  ok  24 [webkit] › tests\browser\annotation-group.spec.ts:4:3 › annotation group selection, drag and deletion at 1440px (11.8s)
+  ok  27 [webkit] › tests\browser\annotation-group.spec.ts:4:3 › annotation group selection, drag and deletion at 390px (6.1s)
+  ok  26 [webkit] › tests\browser\annotation-reselection.spec.ts:4:3 › saved annotation groups and Shift-click at 1440px (13.2s)
+  ok  28 [webkit] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate mixed annotations with Undo (7.2s)
+  ok  30 [webkit] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate note annotations with Undo (4.2s)
+  ok  29 [webkit] › tests\browser\annotation-reselection.spec.ts:4:3 › saved annotation groups and Shift-click at 390px (7.8s)
+  ok  31 [webkit] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate measurement annotations with Undo (4.0s)
+  ok  33 [webkit] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate dimension annotations with Undo (4.1s)
+  ok  32 [webkit] › tests\browser\annotation-visibility.spec.ts:4:2 › Text notes visibility preserves data and excludes hidden selections (6.0s)
+  ok  34 [webkit] › tests\browser\area-localization.spec.ts:4:1 › area summary keeps measurements and imported room names across languages (3.8s)
+  ok  35 [webkit] › tests\browser\annotation-visibility.spec.ts:4:2 › Measurements visibility preserves data and excludes hidden selections (6.1s)
+  ok  36 [webkit] › tests\browser\automatic-dimension-fit.spec.ts:5:3 › fit includes automatic dimension ink at 1440px (3.7s)
+  ok  38 [webkit] › tests\browser\automatic-dimension-fit.spec.ts:5:3 › fit includes automatic dimension ink at 390px (2.4s)
+  ok  37 [webkit] › tests\browser\annotation-visibility.spec.ts:4:2 › Annotations visibility preserves data and excludes hidden selections (6.2s)
+  ok  39 [webkit] › tests\browser\auxiliary-selection.spec.ts:4:3 › guides selection clears on Escape and deletes only its target (4.4s)
+  ok  40 [webkit] › tests\browser\background-initial-fit.spec.ts:5:3 › initial framing waits for tracing-image dimensions at 1440px (2.4s)
+  ok  42 [webkit] › tests\browser\background-initial-fit.spec.ts:5:3 › initial framing waits for tracing-image dimensions at 390px (1.4s)
+  ok  41 [webkit] › tests\browser\auxiliary-selection.spec.ts:4:3 › measurements selection clears on Escape and deletes only its target (4.1s)
+  ok  43 [webkit] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image takes priority over floor below at 1440px (2.7s)
+  ok  45 [webkit] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image failure falls back over floor below at 1440px (2.2s)
+  ok  44 [webkit] › tests\browser\auxiliary-selection.spec.ts:4:3 › annotations selection clears on Escape and deletes only its target (4.1s)
+  ok  46 [webkit] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image takes priority over floor below at 390px (1.7s)
+  ok  48 [webkit] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image failure falls back over floor below at 390px (1.6s)
+  ok  47 [webkit] › tests\browser\auxiliary-selection.spec.ts:4:3 › textAnnotations selection clears on Escape and deletes only its target (4.5s)
+  ok  50 [webkit] › tests\browser\camera-localization.spec.ts:5:1 › Portuguese camera controls capture full-size images and release the preview (7.9s)
+  ok  51 [webkit] › tests\browser\canvas-hints-localization.spec.ts:4:34 › Portuguese canvas hints guide drawing and cancel elevation picking at 1440px (2.6s)
+  ok  52 [webkit] › tests\browser\canvas-hints-localization.spec.ts:4:34 › Portuguese canvas hints guide drawing and cancel elevation picking at 390px (2.8s)
+  ok  49 [webkit] › tests\browser\background-properties-localization.spec.ts:4:1 › Portuguese background controls preserve image bytes and restore removed images (19.6s)
+  ok  54 [webkit] › tests\browser\canvas-room-polygons.spec.ts:4:1 › room hit polygons and names stay synchronized across floor switches (4.0s)
+  ok  55 [webkit] › tests\browser\canvas-wall-actions-localization.spec.ts:4:37 › Portuguese straight wall split preserves openings and undo (12.6s)
+  ok  53 [webkit] › tests\browser\canvas-idle.spec.ts:54:1 › 2D sleeps between display, camera, tool, geometry and history changes (23.2s)
+  ok  57 [webkit] › tests\browser\canvas-idle.spec.ts:112:1 › late tracing images wake 2D and cannot replace another floor image (5.4s)
+  ok  58 [webkit] › tests\browser\canvas-idle.spec.ts:135:1 › phone-width touch pan and pinch redraw while moving and sleep when stationary (4.9s)
+  ok  59 [webkit] › tests\browser\caption-fit.spec.ts:5:3 › fit includes measurement and dimension caption ink at 1440px (3.3s)
+  ok  60 [webkit] › tests\browser\caption-fit.spec.ts:5:3 › fit includes measurement and dimension caption ink at 390px (2.4s)
+  ok  56 [webkit] › tests\browser\canvas-wall-actions-localization.spec.ts:4:37 › Portuguese curved wall split preserves openings and undo (19.3s)
+  ok  61 [webkit] › tests\browser\capture-errors-localization.spec.ts:3:1 › Portuguese capture import failures keep the editor available (4.8s)
+  ok  62 [webkit] › tests\browser\canvas-wall-actions-localization.spec.ts:73:40 › midpoint split explains and preserves a crossing door (6.1s)
+  ok  63 [webkit] › tests\browser\capture-save-recovery.spec.ts:5:1 › downloaded capture survives initial save failure and retries without reimporting (2.7s)
+  ok  65 [webkit] › tests\browser\catalog-categories-localization.spec.ts:3:1 › Portuguese category filters and accent-free search retain original catalog items (4.6s)
+  ok  64 [webkit] › tests\browser\canvas-wall-actions-localization.spec.ts:73:40 › midpoint split explains and preserves a crossing window (6.2s)
+  ok  66 [webkit] › tests\browser\catalog-keyboard.spec.ts:4:72 › en: favorites support keyboard without starting placement (catalog) (3.5s)
+  ok  67 [webkit] › tests\browser\column-properties-localization.spec.ts:4:1 › Portuguese column properties retain dimensions when switching shape (5.9s)
+  ok  68 [webkit] › tests\browser\catalog-keyboard.spec.ts:4:72 › en: favorites support keyboard without starting placement (recent) (3.7s)
+  ok  69 [webkit] › tests\browser\command-furniture-localization.spec.ts:4:1 › Portuguese command furniture search preserves aliases and keyboard placement IDs (3.8s)
+  ok  70 [webkit] › tests\browser\catalog-keyboard.spec.ts:4:72 › pt: favorites support keyboard without starting placement (catalog) (3.8s)
+  ok  72 [webkit] › tests\browser\catalog-keyboard.spec.ts:4:72 › pt: favorites support keyboard without starting placement (recent) (3.5s)
+  ok  71 [webkit] › tests\browser\content-fit.spec.ts:12:3 › initial framing selects a distant note on a wall-free floor at 1440px (5.1s)
+  ok  74 [webkit] › tests\browser\content-fit.spec.ts:12:3 › initial framing selects a distant note on a wall-free floor at 390px (3.0s)
+  ok  73 [webkit] › tests\browser\catalog-keyboard.spec.ts:40:36 › en: requested annotation editing focuses its named field and context menus fit the viewport (7.5s)
+  ok  76 [webkit] › tests\browser\catalog-keyboard.spec.ts:40:36 › pt: requested annotation editing focuses its named field and context menus fit the viewport (7.1s)
+  ok  77 [webkit] › tests\browser\context-properties-keyboard.spec.ts:4:82 › keyboard door Properties focuses editing and preserves Undo at 1440px (6.2s)
+  ok  78 [webkit] › tests\browser\context-properties-keyboard.spec.ts:4:82 › keyboard window Properties focuses editing and preserves Undo at 1440px (5.8s)
+  ok  79 [webkit] › tests\browser\context-properties-keyboard.spec.ts:4:82 › keyboard door Properties focuses editing and preserves Undo at 390px (3.3s)
+  ok  80 [webkit] › tests\browser\context-properties-keyboard.spec.ts:4:82 › keyboard window Properties focuses editing and preserves Undo at 390px (3.2s)
+  ok  81 [webkit] › tests\browser\context-room-keyboard.spec.ts:4:34 › keyboard room rename and floor materials preserve focus and Undo at 1440px (19.0s)
+  ok  82 [webkit] › tests\browser\context-room-keyboard.spec.ts:4:34 › keyboard room rename and floor materials preserve focus and Undo at 390px (10.0s)
+  x   75 [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order (1.0m)
+(node:22764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  84 [webkit] › tests\browser\curved-group-drag.spec.ts:4:3 › Curved-wall group translation preserves shape at 1440px (6.9s)
+  ok  85 [webkit] › tests\browser\curved-group-drag.spec.ts:4:3 › Curved-wall group translation preserves shape at 390px (3.9s)
+  x   86 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo (4.5s)
+(node:7804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   87 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo (4.6s)
+(node:25720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  88 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › click a door uses the curved wall path and supports Undo (6.9s)
+  ok  89 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › click a window uses the curved wall path and supports Undo (6.8s)
+  ok  90 [webkit] › tests\browser\curved-openings.spec.ts:23:36 › curved openings and trim follow the curve in active and stacked browser meshes (12.2s)
+  x   83 [webkit] › tests\browser\crossing-rooms.spec.ts:30:1 › crossing dividers produce four room slabs across active-floor switches (3.0m)
+(node:20504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   91 [webkit] › tests\browser\curved-openings.spec.ts:23:36 › curved openings and trim follow the curve in active and stacked browser meshes after splitting (3.0m)
+Testing stopped early after 5 maximum allowed failures.
+  x   92 [webkit] › tests\browser\curved-rooms.spec.ts:27:1 › curved room slabs follow the wall bulge across active-floor switches (50.0s)
+
+
+  1) [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '💺 Armchair', exact: true }).first()
+
+
+      17 |   const before = await exported();
+      18 |   await page.getByRole('button', { name: 'Toggle Layers Panel', exact: true }).click();
+    > 19 |   await page.getByRole('button', { name: '💺 Armchair', exact: true }).first().click();
+         |                                                                                ^
+      20 |   async function action(name: RegExp) {
+      21 |     const canvas = page.getByLabel('Floor plan editor canvas', { exact: true });
+      22 |     await canvas.focus(); await canvas.press('Shift+F10');
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\context-furniture-actions.spec.ts:19:80
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [webkit] › tests\browser\crossing-rooms.spec.ts:30:1 › crossing dividers produce four room slabs across active-floor switches 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: page.waitForEvent: Test timeout of 180000ms exceeded.
+    =========================== logs ===========================
+    waiting for event "download"
+    ============================================================
+
+      42 |   await expect(hint).toBeHidden({ timeout: 15_000 });
+      43 |   async function exported() {
+    > 44 |     const pending = page.waitForEvent('download');
+         |                          ^
+      45 |     await page.getByRole('button', { name: 'Export Blender Scene', exact: true }).click();
+      46 |     return JSON.parse(await readFile((await (await pending).path())!, 'utf8'));
+      47 |   }
+        at exported (C:\DEVELOPMENT\HOMEFORGE\tests\browser\crossing-rooms.spec.ts:44:26)
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\crossing-rooms.spec.ts:48:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\crossing-rooms-crossing-di-37c22-cross-active-floor-switches-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\crossing-rooms-crossing-di-37c22-cross-active-floor-switches-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\crossing-rooms-crossing-di-37c22-cross-active-floor-switches-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\crossing-rooms-crossing-di-37c22-cross-active-floor-switches-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+      28 |   else { await card.click(); await canvas.click({ position }); await canvas.press('Escape'); }
+      29 |   const placed = await exported(), key = kind === 'door' ? 'doors' : 'windows';
+    > 30 |   expect(placed[0][key]).toHaveLength(1);
+         |                          ^
+      31 |   expect(placed[0][key][0]).toMatchObject({ wallId: floor.walls[0].id, type: kind === 'door' ? 'single' : 'fixed' });
+      32 |   expect(placed[0][key][0].position).toBeCloseTo(.5, 1);
+      33 |   expect(placed[0].walls).toEqual(before[0].walls);
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-opening-drop.spec.ts:30:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+      28 |   else { await card.click(); await canvas.click({ position }); await canvas.press('Escape'); }
+      29 |   const placed = await exported(), key = kind === 'door' ? 'doors' : 'windows';
+    > 30 |   expect(placed[0][key]).toHaveLength(1);
+         |                          ^
+      31 |   expect(placed[0][key][0]).toMatchObject({ wallId: floor.walls[0].id, type: kind === 'door' ? 'single' : 'fixed' });
+      32 |   expect(placed[0][key][0].position).toBeCloseTo(.5, 1);
+      33 |   expect(placed[0].walls).toEqual(before[0].walls);
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-opening-drop.spec.ts:30:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [webkit] › tests\browser\curved-openings.spec.ts:23:36 › curved openings and trim follow the curve in active and stacked browser meshes after splitting 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: locator.click: Test timeout of 180000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '─ Wall 1', exact: true })
+
+
+      32 |   if (split) {
+      33 |     await page.getByRole('button', { name: 'Toggle Layers Panel', exact: true }).click();
+    > 34 |     await page.getByRole('button', { name: '─ Wall 1', exact: true }).click();
+         |                                                                       ^
+      35 |     await page.getByRole('button', { name: 'Split wall at midpoint', exact: true }).click();
+      36 |     await expect(page.getByText('2 walls', { exact: true })).toBeVisible();
+      37 |   }
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-openings.spec.ts:34:71
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-openings-curved-ope-8da00-wser-meshes-after-splitting-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-openings-curved-ope-8da00-wser-meshes-after-splitting-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-openings-curved-ope-8da00-wser-meshes-after-splitting-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-openings-curved-ope-8da00-wser-meshes-after-splitting-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order 
+    [webkit] › tests\browser\crossing-rooms.spec.ts:30:1 › crossing dividers produce four room slabs across active-floor switches 
+    [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 
+    [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo 
+    [webkit] › tests\browser\curved-openings.spec.ts:23:36 › curved openings and trim follow the curve in active and stacked browser meshes after splitting 
+  1 interrupted
+    [webkit] › tests\browser\curved-rooms.spec.ts:27:1 › curved room slabs follow the wall bulge across active-floor switches 
+  301 did not run
+  86 passed (8.7m)
+  1 error was not a part of any test, see above for details

@@ -1,0 +1,72 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test --max-failures=5 --global-timeout=720000
+
+[WebServer] (node:12408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1179 tests using 1 worker
+
+(node:6612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok    1 [chromium] › tests\browser\3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo (5.1s)
+  ok    2 [chromium] › tests\browser\accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry (3.0s)
+  ok    3 [chromium] › tests\browser\accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry (2.6s)
+  ok    4 [chromium] › tests\browser\accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry (2.5s)
+  ok    5 [chromium] › tests\browser\accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry (2.7s)
+  ok    6 [chromium] › tests\browser\accessory-drag-undo.spec.ts:6:3 › entourage-resize drag has one undo entry and restores geometry (2.6s)
+  ok    7 [chromium] › tests\browser\ai-panel-localization.spec.ts:3:1 › Portuguese AI choices preserve provider prompt values without sending an image (2.9s)
+[WebServer] 
+[WebServer] [404] POST /api/openai-proxy
+  ok    8 [chromium] › tests\browser\ai-provider.spec.ts:24:3 › direct AI provider settings and camera render work at 1440px without hosting requests (6.2s)
+[WebServer] 
+[WebServer] [404] POST /api/openai-proxy
+  ok    9 [chromium] › tests\browser\ai-provider.spec.ts:24:3 › direct AI provider settings and camera render work at 390px without hosting requests (12.6s)
+  ok   10 [chromium] › tests\browser\alignment.spec.ts:6:3 › en: Align Left respects geometry and locks at 1440px (2.6s)
+  ok   11 [chromium] › tests\browser\alignment.spec.ts:6:3 › en: Distribute Horizontally respects geometry and locks at 1440px (2.3s)
+  ok   12 [chromium] › tests\browser\alignment.spec.ts:6:3 › en: Align Left respects geometry and locks at 390px (1.3s)
+  ok   13 [chromium] › tests\browser\alignment.spec.ts:6:3 › en: Distribute Horizontally respects geometry and locks at 390px (1.3s)
+  ok   14 [chromium] › tests\browser\alignment.spec.ts:6:3 › pt: Align Left respects geometry and locks at 1440px (2.3s)
+  ok   15 [chromium] › tests\browser\alignment.spec.ts:6:3 › pt: Distribute Horizontally respects geometry and locks at 1440px (2.1s)
+  ok   16 [chromium] › tests\browser\alignment.spec.ts:6:3 › pt: Align Left respects geometry and locks at 390px (1.2s)
+  ok   17 [chromium] › tests\browser\alignment.spec.ts:6:3 › pt: Distribute Horizontally respects geometry and locks at 390px (1.2s)
+  ok   18 [chromium] › tests\browser\annotation-alignment.spec.ts:4:3 › Align Left aligns saved annotations at 1440px (2.7s)
+  ok   19 [chromium] › tests\browser\annotation-alignment.spec.ts:4:3 › Distribute Horizontally aligns saved annotations at 1440px (2.5s)
+  ok   20 [chromium] › tests\browser\annotation-alignment.spec.ts:4:3 › Align Left aligns saved annotations at 390px (1.5s)
+  ok   21 [chromium] › tests\browser\annotation-alignment.spec.ts:4:3 › Distribute Horizontally aligns saved annotations at 390px (1.6s)
+  ok   22 [chromium] › tests\browser\annotation-clipboard.spec.ts:4:3 › textAnnotations clipboard survives deletion and supports independent repeat pastes (1.9s)
+  ok   23 [chromium] › tests\browser\annotation-clipboard.spec.ts:4:3 › measurements clipboard survives deletion and supports independent repeat pastes (1.8s)
+  ok   24 [chromium] › tests\browser\annotation-clipboard.spec.ts:4:3 › annotations clipboard survives deletion and supports independent repeat pastes (2.0s)
+  ok   25 [chromium] › tests\browser\annotation-group.spec.ts:4:3 › annotation group selection, drag and deletion at 1440px (4.3s)
+  ok   26 [chromium] › tests\browser\annotation-group.spec.ts:4:3 › annotation group selection, drag and deletion at 390px (2.8s)
+  ok   27 [chromium] › tests\browser\annotation-reselection.spec.ts:4:3 › saved annotation groups and Shift-click at 1440px (5.5s)
+  ok   28 [chromium] › tests\browser\annotation-reselection.spec.ts:4:3 › saved annotation groups and Shift-click at 390px (3.1s)
+  ok   29 [chromium] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate mixed annotations with Undo (2.4s)
+  ok   30 [chromium] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate note annotations with Undo (1.4s)
+  ok   31 [chromium] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate measurement annotations with Undo (1.3s)
+  ok   32 [chromium] › tests\browser\annotation-rotation.spec.ts:5:3 › rotate dimension annotations with Undo (1.3s)
+  ok   33 [chromium] › tests\browser\annotation-visibility.spec.ts:4:2 › Text notes visibility preserves data and excludes hidden selections (2.3s)
+  ok   34 [chromium] › tests\browser\annotation-visibility.spec.ts:4:2 › Measurements visibility preserves data and excludes hidden selections (2.5s)
+  ok   35 [chromium] › tests\browser\annotation-visibility.spec.ts:4:2 › Annotations visibility preserves data and excludes hidden selections (2.4s)
+  ok   36 [chromium] › tests\browser\area-localization.spec.ts:4:1 › area summary keeps measurements and imported room names across languages (1.2s)
+  ok   37 [chromium] › tests\browser\automatic-dimension-fit.spec.ts:5:3 › fit includes automatic dimension ink at 1440px (1.2s)
+  ok   38 [chromium] › tests\browser\automatic-dimension-fit.spec.ts:5:3 › fit includes automatic dimension ink at 390px (817ms)
+  ok   39 [chromium] › tests\browser\auxiliary-selection.spec.ts:4:3 › guides selection clears on Escape and deletes only its target (1.7s)
+  ok   40 [chromium] › tests\browser\auxiliary-selection.spec.ts:4:3 › measurements selection clears on Escape and deletes only its target (1.6s)
+  ok   41 [chromium] › tests\browser\auxiliary-selection.spec.ts:4:3 › annotations selection clears on Escape and deletes only its target (1.5s)
+  ok   42 [chromium] › tests\browser\auxiliary-selection.spec.ts:4:3 › textAnnotations selection clears on Escape and deletes only its target (1.6s)
+  ok   43 [chromium] › tests\browser\background-initial-fit.spec.ts:5:3 › initial framing waits for tracing-image dimensions at 1440px (776ms)
+  ok   44 [chromium] › tests\browser\background-initial-fit.spec.ts:5:3 › initial framing waits for tracing-image dimensions at 390px (579ms)
+  ok   45 [chromium] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image takes priority over floor below at 1440px (771ms)
+  ok   46 [chromium] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image failure falls back over floor below at 1440px (820ms)
+  ok   47 [chromium] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image takes priority over floor below at 390px (712ms)
+  ok   48 [chromium] › tests\browser\background-initial-fit.spec.ts:37:5 › delayed image failure falls back over floor below at 390px (656ms)
+  ok   49 [chromium] › tests\browser\background-properties-localization.spec.ts:4:1 › Portuguese background controls preserve image bytes and restore removed images (5.5s)
+  ok   50 [chromium] › tests\browser\camera-localization.spec.ts:5:1 › Portuguese camera controls capture full-size images and release the preview (6.1s)
+  ok   51 [chromium] › tests\browser\canvas-hints-localization.spec.ts:4:34 › Portuguese canvas hints guide drawing and cancel elevation picking at 1440px (1.8s)
+  ok   52 [chromium] › tests\browser\canvas-hints-localization.spec.ts:4:34 › Portuguese canvas hints guide drawing and cancel elevation picking at 390px (1.7s)
+  ok   53 [chromium] › tests\browser\canvas-idle.spec.ts:54:1 › 2D sleeps between display, camera, tool, geometry and history changes (17.0s)
+  ok   54 [chromium] › tests\browser\canvas-idle.spec.ts:112:1 › late tracing images wake 2D and cannot replace another floor image (3.9s)
+  ok   55 [chromium] › tests\browser\canvas-idle.spec.ts:135:1 › phone-width touch pan and pinch redraw while moving and sleep when stationary (3.6s)
+  ok   56 [chromium] › tests\browser\canvas-room-polygons.spec.ts:4:1 › room hit polygons and names stay synchronized across floor switches (2.6s)
+  ok   57 [chromium] › tests\browser\canvas-wall-actions-localization.spec.ts:4:37 › Portuguese straight wall split preserves openings and undo (4.0s)

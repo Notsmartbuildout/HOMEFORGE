@@ -1,0 +1,271 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test --project=chromium
+
+[WebServer] (node:31) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 393 tests using 1 worker
+
+(node:39) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    1 [chromium] › tests/browser/3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo (2ms)
+(node:51) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    2 [chromium] › tests/browser/3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo (retry #1) (2ms)
+(node:63) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    3 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry (2ms)
+(node:75) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    4 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry (retry #1) (2ms)
+(node:87) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    5 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry (2ms)
+(node:99) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    6 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry (retry #1) (6ms)
+(node:111) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    7 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry (7ms)
+(node:123) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    8 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry (retry #1) (3ms)
+(node:135) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘    9 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry (7ms)
+(node:147) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   10 [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry (retry #1) (6ms)
+Testing stopped early after 5 maximum allowed failures.
+
+
+  1) [chromium] › tests/browser/3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo 
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/3d-furniture-localization--4cb32-s-catalog-identity-and-undo-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry 
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-door-d-579d3-entry-and-restores-geometry-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry 
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-window-20fd8-entry-and-restores-geometry-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry 
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-guide--5bb08-entry-and-restores-geometry-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry 
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/accessory-drag-undo-entour-c1876-entry-and-restores-geometry-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    [chromium] › tests/browser/3d-furniture-localization.spec.ts:4:1 › Portuguese 3D furniture placement preserves catalog identity and undo 
+    [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › door drag has one undo entry and restores geometry 
+    [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › window drag has one undo entry and restores geometry 
+    [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › guide drag has one undo entry and restores geometry 
+    [chromium] › tests/browser/accessory-drag-undo.spec.ts:6:3 › entourage drag has one undo entry and restores geometry 
+  388 did not run
+  1 error was not a part of any test, see above for details

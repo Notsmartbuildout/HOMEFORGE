@@ -1,0 +1,5 @@
+
+> open3dfloorplan@0.9.0 benchmark:viewer
+> playwright test --config=playwright.benchmark.config.ts --port=4190
+
+error: unknown option '--port=4190'

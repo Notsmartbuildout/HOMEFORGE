@@ -1,0 +1,18 @@
+[
+  {
+    "Route": "/",
+    "Status": 200
+  },
+  {
+    "Route": "/editor",
+    "Status": 200
+  },
+  {
+    "Route": "/api/assistant-shares",
+    "Status": 405
+  },
+  {
+    "Route": "/api/handoffs",
+    "Status": 405
+  }
+]

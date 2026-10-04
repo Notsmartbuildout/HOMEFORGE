@@ -1,0 +1,123 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test tests/browser/context-furniture-actions.spec.ts tests/browser/crossing-rooms.spec.ts tests/browser/curved-opening-drop.spec.ts tests/browser/curved-openings.spec.ts --project=webkit --workers=1 --grep furniture context actions|crossing dividers|drop a (door|window)|after splitting --max-failures=5 --global-timeout=900000
+
+[WebServer] (node:24100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:27536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order (1.0m)
+(node:20956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 [webkit] › tests\browser\crossing-rooms.spec.ts:30:1 › crossing dividers produce four room slabs across active-floor switches (12.4s)
+  x  3 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo (4.4s)
+(node:15388) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo (4.5s)
+(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 [webkit] › tests\browser\curved-openings.spec.ts:23:36 › curved openings and trim follow the curve in active and stacked browser meshes after splitting (13.7s)
+
+
+  1) [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '💺 Armchair', exact: true }).first()
+
+
+      17 |   const before = await exported();
+      18 |   await page.getByRole('button', { name: 'Toggle Layers Panel', exact: true }).click();
+    > 19 |   await page.getByRole('button', { name: '💺 Armchair', exact: true }).first().click();
+         |                                                                                ^
+      20 |   async function action(name: RegExp) {
+      21 |     const canvas = page.getByLabel('Floor plan editor canvas', { exact: true });
+      22 |     await canvas.focus(); await canvas.press('Shift+F10');
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\context-furniture-actions.spec.ts:19:80
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\context-furniture-actions--8fceb-ize-and-undo-stacking-order-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+      28 |   else { await card.click(); await canvas.click({ position }); await canvas.press('Escape'); }
+      29 |   const placed = await exported(), key = kind === 'door' ? 'doors' : 'windows';
+    > 30 |   expect(placed[0][key]).toHaveLength(1);
+         |                          ^
+      31 |   expect(placed[0][key][0]).toMatchObject({ wallId: floor.walls[0].id, type: kind === 'door' ? 'single' : 'fixed' });
+      32 |   expect(placed[0][key][0].position).toBeCloseTo(.5, 1);
+      33 |   expect(placed[0].walls).toEqual(before[0].walls);
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-opening-drop.spec.ts:30:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+      28 |   else { await card.click(); await canvas.click({ position }); await canvas.press('Escape'); }
+      29 |   const placed = await exported(), key = kind === 'door' ? 'doors' : 'windows';
+    > 30 |   expect(placed[0][key]).toHaveLength(1);
+         |                          ^
+      31 |   expect(placed[0][key][0]).toMatchObject({ wallId: floor.walls[0].id, type: kind === 'door' ? 'single' : 'fixed' });
+      32 |   expect(placed[0][key][0].position).toBeCloseTo(.5, 1);
+      33 |   expect(placed[0].walls).toEqual(before[0].walls);
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-opening-drop.spec.ts:30:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-opening-drop-drop-a-986c1-wall-path-and-supports-Undo-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [webkit] › tests\browser\context-furniture-actions.spec.ts:5:1 › furniture context actions preserve size and undo stacking order 
+    [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 
+    [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a window uses the curved wall path and supports Undo 
+  2 passed (1.7m)

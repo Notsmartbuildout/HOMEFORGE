@@ -1,0 +1,12 @@
+[
+  {
+    "Route": "/api/assistant-shares",
+    "Status": 503,
+    "Body": "{\"error\":\"Assistant sharing is not available. Export the project package and attach it instead.\"}"
+  },
+  {
+    "Route": "/api/handoffs",
+    "Status": 503,
+    "Body": "{\"error\":\"Link sharing is unavailable. Use Export Editable Plan (JSON) instead.\"}"
+  }
+]

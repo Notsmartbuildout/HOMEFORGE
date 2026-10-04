@@ -1,0 +1,43 @@
+# npm audit report
+
+@grpc/grpc-js  <=1.13.5
+Severity: high
+@grpc/grpc-js: In certain configurations, getAuthContext can return unauthorized certificates as though they were authorized - https://github.com/advisories/GHSA-m9gg-hp2v-232j
+@grpc/grpc-js: The server transmits some error messages thrown by method handlers to the client in status messages - https://github.com/advisories/GHSA-f596-whhp-79r4
+fix available via `npm audit fix --force`
+Will install firebase@9.14.0, which is a breaking change
+node_modules/@grpc/grpc-js
+  @firebase/firestore  1.3.1-0 - 1.3.1-canary.df1b588 || 1.3.2-0 - 1.3.3-canary.bc4a844 || 1.13.1-0 - 1.13.1-canary.ce3addba || 1.14.0-0 - 1.15.1 || 3.7.3-20221108184443 - 3.7.3-canary.fde5adf63 || >=3.8.0-20221206221533
+  Depends on vulnerable versions of @grpc/grpc-js
+  node_modules/@firebase/firestore
+    @firebase/firestore-compat  <=0.0.900-exp.520ca39d0 || 0.2.3-20221108184443 - 0.2.3-canary.fde5adf63 || >=0.3.0-20221206221533
+    Depends on vulnerable versions of @firebase/firestore
+    node_modules/@firebase/firestore-compat
+      firebase  0.900.22 || 6.0.2-0 - 6.0.2-canary.42eae23 || 6.0.3-0 - 6.0.4-canary.bc4a844 || 7.9.1-0 - 7.9.1-canary.0396117e || 7.13.2-0 - 7.13.2-canary.ce3addba || 7.14.0-0 - 7.15.1 || 8.10.0-20217172214 - 8.10.0-canary.f40c0db53 || 9.0.0-20217250818 - 9.0.0-canary.d0d3acb10 || 9.0.1-2021727231341 - 9.0.1-canary.e039e1472 || 9.0.2-2021891633 - 9.0.2-canary.ff9baf70c || 9.0.3-202181503543 - 9.1.0-canary.f7d8324a1 || 9.1.1-2021830195733 - 9.1.1-canary.e70de6201 || 9.1.2-20219523556 - 9.1.2-canary.fc1d36497 || 9.13.1-20221108184443 - 9.14.0-canary.fde5adf63 || >=9.15.0-20221206221533
+      Depends on vulnerable versions of @firebase/firestore
+      Depends on vulnerable versions of @firebase/firestore-compat
+      node_modules/firebase
+
+devalue  <=5.9.2
+Severity: high
+devalue: `stringify`/`uneval` serialize shared memory - https://github.com/advisories/GHSA-j22f-vq7h-c4qm
+devalue: Residual sparse-array CPU amplification in uneval - https://github.com/advisories/GHSA-hx4r-w6wj-j8fg
+devalue: Repeated primitive strings cause quadratic expansion in uneval - https://github.com/advisories/GHSA-mcm9-63f2-9j32
+devalue: Sparse arrays emitted by uneval cause eager allocation when evaluated - https://github.com/advisories/GHSA-wf3x-273g-mvxv
+devalue: stringifyAsync can cause an unhandled rejection despite a caught returned promise - https://github.com/advisories/GHSA-x5rw-q4pp-hg5g
+devalue: Malformed null-prototype object keys bypass __proto__ rejection via property-key coercion - https://github.com/advisories/GHSA-4q55-j62x-fr9h
+fix available via `npm audit fix`
+node_modules/devalue
+
+dompurify  3.4.13 - 3.4.15
+DOMPurify: IN_PLACE: node-removing afterSanitize hook leaves detached subtree event handlers armed, causing DOM XSS - https://github.com/advisories/GHSA-p98j-92pf-mc4p
+fix available via `npm audit fix`
+node_modules/dompurify
+
+6 vulnerabilities (1 low, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

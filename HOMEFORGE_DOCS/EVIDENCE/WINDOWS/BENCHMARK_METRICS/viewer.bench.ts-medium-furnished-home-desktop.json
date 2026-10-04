@@ -1,0 +1,54 @@
+{
+  "fixtureVersion": 1,
+  "size": "medium",
+  "profile": "desktop",
+  "environment": {
+    "browser": "chromium",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "dpr": 1,
+    "ci": false,
+    "renderer": "CI uses software rendering; phone profile is a viewport, not a device"
+  },
+  "project": {
+    "floors": 2,
+    "rooms": 18,
+    "walls": 48,
+    "furniture": 108,
+    "activeFurniture": 54,
+    "jsonBytes": 30335,
+    "distinctModelRequests": 3
+  },
+  "firstDrawMs": 1004.1286999999993,
+  "readyMs": 1004.9907000000003,
+  "renameMs": 160.31820000000153,
+  "stackMs": 273.46840000000157,
+  "renameAllocations": {
+    "Buffer": 0,
+    "Texture": 0,
+    "Program": 0,
+    "Framebuffer": 0,
+    "Renderbuffer": 0
+  },
+  "activeResources": {
+    "Buffer": 1383,
+    "Texture": 24,
+    "Program": 9,
+    "Framebuffer": 10,
+    "Renderbuffer": 6
+  },
+  "stackedResources": {
+    "Buffer": 1674,
+    "Texture": 26,
+    "Program": 9,
+    "Framebuffer": 10,
+    "Renderbuffer": 6
+  },
+  "dragFrameIntervalMs": {
+    "median": 133.30000000000018,
+    "p95": 349.90000000000055,
+    "samples": 39
+  }
+}

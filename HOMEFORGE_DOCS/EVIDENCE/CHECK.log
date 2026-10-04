@@ -1,0 +1,9 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> open3dfloorplan@0.9.0 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /workspace/scratch/61a5ac14f0e8/HOMEFORGE
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings

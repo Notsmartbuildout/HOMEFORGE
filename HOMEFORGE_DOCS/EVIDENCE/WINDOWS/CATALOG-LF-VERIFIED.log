@@ -1,0 +1,5 @@
+
+> open3dfloorplan@0.9.0 catalog:check
+> node tooling/catalog-manifest.mjs --check
+
+Verified 189 catalog entries and 204 bundled GLBs and 20 textures.
