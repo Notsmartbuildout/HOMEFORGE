@@ -1,0 +1,7 @@
+{
+  "fork": true,
+  "branch": "main",
+  "name": "jessenlawson-cell/HOMEFORGE",
+  "url": "https://github.com/jessenlawson-cell/HOMEFORGE",
+  "parent": "laanlabs/openPlan3D"
+}

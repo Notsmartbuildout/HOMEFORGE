@@ -1,30 +1,42 @@
 # Handoff
 
-User: Jesse Lawson. Project: HOMEFORGE. Date: 2026-10-04. GitHub account verified: jessenlawson-cell. Actual repository and application path: C:\DEVELOPMENT\HOMEFORGE.
+Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repository and application: `C:\DEVELOPMENT\HOMEFORGE`.
 
-The bootstrap originated in a Linux cloud workspace. The authorized Windows setup has now created the real public GitHub fork, cloned its current default branch into the final path, installed dependencies, imported the bootstrap documentation, and configured GitHub Desktop through its UI. Current Windows results are in WINDOWS_BASELINE.md; BASELINE.md and EVIDENCE/*.log retain the distinct historical cloud results.
+## Current state
 
-Upstream: https://github.com/laanlabs/openPlan3D.git
-Pinned commit: d68cadf703578f2cd3a7c77f820e18d342580c32
-Baseline tag: homeforge-upstream-baseline-2026-10-04
-Verified origin: https://github.com/jessenlawson-cell/HOMEFORGE.git
-Verified upstream: https://github.com/laanlabs/openPlan3D.git
-GitHub metadata: fork=true, parent=laanlabs/openPlan3D, default branch=main.
-GitHub Desktop: HOMEFORGE selected on main, signed in as jessenlawson-cell; fork behavior saved and verified as For my own purposes.
+The authorized Windows setup and remediation of known foundation errors are complete. The repository is ready for future development strategy. No HOMEFORGE homeowner features have been implemented.
 
-Product decisions are in PROJECT_CHARTER.md and ARCHITECTURE.md. Source, lockfile, license and upstream history remain unchanged. HOMEFORGE additions are documentation and ignored local configuration only. Repository-local core.autocrlf=false preserves checksum-sensitive upstream bytes; global Git settings were preserved.
+- Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
+- `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
+- `upstream`: https://github.com/laanlabs/openPlan3D.git
+- Verified fork parent: `laanlabs/openPlan3D`; default branch: `main`.
+- Original upstream commit: `d68cadf703578f2cd3a7c77f820e18d342580c32`.
+- Preserved baseline tag: `homeforge-upstream-baseline-2026-10-04`.
+- Remediation checkpoint: `homeforge-foundation-ready-2026-10-04`.
+- GitHub Desktop: HOMEFORGE added from the final path, signed in as `jessenlawson-cell`, fork behaviour **For my own purposes**.
+- Repository-local `core.autocrlf=false` preserves checksum-sensitive files; global Git settings and upstream MIT attribution are preserved.
 
-Windows validation: dependency install, catalog verification, type checking (zero errors/warnings), 1,175 tests in 125 files, final production build, all 393 Chromium cases and all six rendering benchmarks passed. Full dependency audit fails with six vulnerabilities (five high, one low); production-only audit omits affected development dependencies and must not be represented as a full pass.
+## Repairs and verification
 
-Firefox installed but cannot launch due to a Windows side-by-side / mozglue assembly error, reproduced after a supported reinstall. Five launch failures stopped the combined regression run. Separate WebKit run: 86 passed, 5 failed, 1 interrupted, 301 not run. Focused single-worker recheck: 2 passed, 3 failed again (furniture context actions and curved-wall door/window drops). Full Firefox/WebKit coverage is incomplete. Exact commands, error contexts, logs and benchmark metrics are in WINDOWS_BASELINE.md and EVIDENCE/WINDOWS. These findings do not block recording the setup baseline, but the baseline is not a fully passing release gate.
+Compatible dependency updates and a targeted grpc override clear the full audit, including development dependencies. Official Playwright binaries now install in an ignored repository-local cache to avoid the observed packaged-Windows AppData failures. Existing catalog drags have a validated text fallback for Windows WebKit. An inherited deployment-test clock race was corrected without relaxing assertions.
 
-Local .env disables analytics, handoff uploads and assistant sharing, with an empty bucket. The development server returned HTTP 200 for / and /editor and HTTP 503 for disabled sharing POST endpoints. Inherited Firebase capture downloads and direct AI provider paths remain; see the source inventory in WINDOWS_BASELINE.md. Full offline behaviour is not certified.
+Verified: clean install, catalog check, type check with zero errors/warnings, 1,186 unit tests in 126 files, production build, zero full-audit vulnerabilities, reproducible browser installation, all 15 focused furniture/curved-opening cases and all 12 deployment cases across all three engines.
 
-Launch in PowerShell:
+The corrected broad rerun passed all 393 Chromium cases and 325 Firefox cases without observed failures. Jesse then clarified that repeating the full suite was unnecessary and requested preparation for development strategy. The remaining broad run was intentionally stopped. WebKit's full suite was not repeated; its known failures pass focused rechecks. All six viewer benchmarks passed in the original Windows baseline and were not repeated after this clarification.
+
+Details and evidence: [FOUNDATION_READY.md](FOUNDATION_READY.md), with logs in `EVIDENCE/FOUNDATION`. [WINDOWS_BASELINE.md](WINDOWS_BASELINE.md) and [BASELINE.md](BASELINE.md) preserve historical Windows and cloud results; their old failures are not the current repair status.
+
+## Local application
 
 ```powershell
 Set-Location C:\DEVELOPMENT\HOMEFORGE
 npm run dev -- --host 127.0.0.1
 ```
 
-Use http://localhost:5173 consistently. No features have been implemented. Next work requires a separate task: review inherited audit findings and any browser/benchmark failures, then proceed to M1/M2 when authorized. Preserve upstream MIT attribution and baseline evidence. Do not force dependency upgrades or push to upstream.
+Use `http://localhost:5173` consistently. Both `/` and `/editor` return HTTP 200. The ignored `.env` disables analytics, handoff uploads and assistant sharing, with an empty bucket. Disabled sharing POST endpoints return HTTP 503. Browser projects are tied to browser profile and origin; export backups before changing either.
+
+No keys, paid services or hosted deployment were configured. Optional inherited Firebase capture and direct AI-provider paths remain for later product review. A tested foundation does not prove every possible workflow is bug-free or certify fully offline behaviour.
+
+## Next action
+
+Copy [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) into ChatGPT for planning, augmentation and a scoped Codex implementation prompt. Preserve accepted decisions in [PROJECT_CHARTER.md](PROJECT_CHARTER.md) and [ARCHITECTURE.md](ARCHITECTURE.md). M1/M2 homeowner navigation, independent variants and measurement verification remain planned; feature implementation requires its own task. Push only to the user's fork.

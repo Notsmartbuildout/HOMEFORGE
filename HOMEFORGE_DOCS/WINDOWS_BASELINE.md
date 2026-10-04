@@ -1,5 +1,7 @@
 # Windows setup and baseline
 
+This is the historical setup snapshot before remediation. Known dependency and browser failures have since been repaired and retested; current status is in [FOUNDATION_READY.md](FOUNDATION_READY.md) and [HANDOFF.md](HANDOFF.md). Preserve the observations below as baseline evidence.
+
 Date: 2026-10-04 (America/Toronto). Checkout: `C:\DEVELOPMENT\HOMEFORGE`.
 
 ## Repository

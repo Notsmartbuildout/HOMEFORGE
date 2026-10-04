@@ -1,0 +1,17 @@
+
+> open3dfloorplan@0.9.0 test
+> vitest run
+
+
+ RUN  v5.0.0 C:/DEVELOPMENT/HOMEFORGE
+
+
+ Test Files  126 passed (126)
+      Tests  1186 passed (1186)
+   Start at  16:23:40
+   Duration  10.01s (import 34%, setup 27%, transform 21%, tests 16%, worker 2%)
+
+     Import  288 modules were evaluated 2915 times · 23.62s total, 34% of tracked time
+             ~1.42s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+

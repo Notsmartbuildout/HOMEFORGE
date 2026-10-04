@@ -1,0 +1,22 @@
+[
+  {
+    "method": "GET",
+    "status": 200,
+    "path": "/"
+  },
+  {
+    "method": "GET",
+    "status": 200,
+    "path": "/editor"
+  },
+  {
+    "method": "POST",
+    "status": 503,
+    "path": "/api/assistant-shares"
+  },
+  {
+    "method": "POST",
+    "status": 503,
+    "path": "/api/handoffs"
+  }
+]

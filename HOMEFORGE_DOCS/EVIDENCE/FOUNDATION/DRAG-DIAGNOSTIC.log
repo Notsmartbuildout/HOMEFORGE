@@ -1,0 +1,51 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test tests/browser/curved-opening-drop.spec.ts --project=webkit --workers=1 --grep drop a door
+
+[WebServer] (node:11344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:19588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+DRAG-DIAGNOSTIC {"event":"dragstart","target":"BUTTON","x":67,"y":850,"types":["application/o3d-type","application/o3d-id"]}
+DRAG-DIAGNOSTIC {"event":"dragenter","target":"CANVAS","x":848,"y":624,"types":["text/plain","text/uri-list","text/html"]}
+DRAG-DIAGNOSTIC {"event":"dragover","target":"CANVAS","x":848,"y":624,"types":["text/plain","text/uri-list","text/html"]}
+DRAG-DIAGNOSTIC {"event":"dragend","target":"BUTTON","x":848,"y":624,"types":[]}
+  x  1 [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo (4.4s)
+
+
+  1) [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+      35 |   else { await card.click(); await canvas.click({ position }); await canvas.press('Escape'); }
+      36 |   const placed = await exported(), key = kind === 'door' ? 'doors' : 'windows';
+    > 37 |   expect(placed[0][key]).toHaveLength(1);
+         |                          ^
+      38 |   expect(placed[0][key][0]).toMatchObject({ wallId: floor.walls[0].id, type: kind === 'door' ? 'single' : 'fixed' });
+      39 |   expect(placed[0][key][0].position).toBeCloseTo(.5, 1);
+      40 |   expect(placed[0].walls).toEqual(before[0].walls);
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\curved-opening-drop.spec.ts:37:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\curved-opening-drop-drop-a-4bed4-wall-path-and-supports-Undo-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [webkit] › tests\browser\curved-opening-drop.spec.ts:4:80 › drop a door uses the curved wall path and supports Undo 

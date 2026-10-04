@@ -1,0 +1,65 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test tests/browser/deployment.spec.ts --workers=2
+
+[WebServer] (node:16880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 2 workers
+
+(node:21396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [chromium] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (3.2s)
+  ok  3 [chromium] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (3.5s)
+  ok  2 [firefox] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (6.8s)
+  ok  4 [chromium] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (1.8s)
+  ok  6 [chromium] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (1.2s)
+(node:2816) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  5 [firefox] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (4.4s)
+  x   7 [webkit] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (2.6s)
+(node:5488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 [firefox] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (2.0s)
+  ok 10 [firefox] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (1.4s)
+  ok  9 [webkit] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (3.7s)
+  ok 11 [webkit] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (3.7s)
+  ok 12 [webkit] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (2.1s)
+
+
+  1) [webkit] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment 
+
+    Error: clock.pauseAt: Error: Cannot fast-forward to the past
+
+      82 |     const clockStart = new Date('2026-09-07T12:00:00Z');
+      83 |     await page.clock.install({ time: clockStart });
+    > 84 |     await page.clock.pauseAt(clockStart);
+         |                      ^
+      85 |     await page.goto(`${server.url}/editor?id=qa-deployment-cache`);
+      86 |     await expect(page.getByRole('button', { name: /^(?:Save|Salvar)$/, exact: true })).toBeVisible();
+      87 |     await expect(page.getByTitle(/^(?:Click\ to\ rename|Clique\ para\ renomear)$/, { exact: true })).toHaveText('QA Save Conflicts');
+        at C:\DEVELOPMENT\HOMEFORGE\tests\browser\deployment.spec.ts:84:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\deployment-real-cached-val-1ef8c--or-hide-a-later-deployment-webkit\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\deployment-real-cached-val-1ef8c--or-hide-a-later-deployment-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\deployment-real-cached-val-1ef8c--or-hide-a-later-deployment-webkit\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\deployment-real-cached-val-1ef8c--or-hide-a-later-deployment-webkit\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\deployment-real-cached-val-1ef8c--or-hide-a-later-deployment-webkit\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [webkit] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment 
+  11 passed (25.7s)

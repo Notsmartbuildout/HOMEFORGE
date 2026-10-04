@@ -1,0 +1,29 @@
+
+> open3dfloorplan@0.9.0 test:browser
+> playwright test tests/browser/deployment.spec.ts --workers=2
+
+[WebServer] (node:22816) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 2 workers
+
+(node:24916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17180) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [chromium] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (3.3s)
+  ok  2 [firefox] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (6.2s)
+  ok  3 [chromium] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (3.7s)
+  ok  5 [chromium] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (2.0s)
+  ok  6 [chromium] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (1.4s)
+(node:24496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 [firefox] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (5.1s)
+  ok  8 [firefox] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (2.0s)
+  ok  9 [firefox] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (1.2s)
+  ok  7 [webkit] › tests\browser\deployment.spec.ts:48:1 › real cached validators cannot create a false update or hide a later deployment (6.3s)
+  ok 10 [webkit] › tests\browser\deployment.spec.ts:122:36 › en: update reload preserves failed saves, JSON recovery and the chosen destination (3.5s)
+  ok 11 [webkit] › tests\browser\deployment.spec.ts:122:36 › pt: update reload preserves failed saves, JSON recovery and the chosen destination (3.4s)
+  ok 12 [webkit] › tests\browser\deployment.spec.ts:155:1 › failed update requests remain quiet and retry after recovery (2.2s)
+
+  12 passed (28.0s)

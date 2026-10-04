@@ -1,0 +1,28 @@
+
+> open3dfloorplan@0.9.0 test
+> vitest run tests/catalog-drag.test.ts
+
+
+ RUN  v5.0.0 C:/DEVELOPMENT/HOMEFORGE
+
+ ❯ tests/catalog-drag.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/catalog-drag.test.ts [ tests/catalog-drag.test.ts ]
+Error: Cannot find module '../src/lib/utils/catalogDrag' imported from C:/DEVELOPMENT/HOMEFORGE/tests/catalog-drag.test.ts
+ ❯ tests/catalog-drag.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { readCatalogDrag, writeCatalogDrag } from '../src/lib/utils/ca…
+       | ^
+      3|
+      4| function transfer() {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:19:09
+   Duration  1.13s (setup 76%, transform 20%, worker 3%)
+

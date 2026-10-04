@@ -26,6 +26,7 @@
   import { roomPresets, placePreset } from '$lib/utils/roomPresets';
   import { roomTemplates, placeRoomTemplate } from '$lib/utils/roomTemplates';
   import { openingDropTarget } from '$lib/utils/openingDrop';
+  import { readCatalogDrag } from '$lib/utils/catalogDrag';
   import { getWallTextureCanvas, getFloorTextureCanvas, setTextureLoadCallback } from '$lib/utils/textureGenerator';
   import { projectSettings, formatLength, formatArea } from '$lib/stores/settings';
   import type { ProjectSettings } from '$lib/stores/settings';
@@ -3579,15 +3580,13 @@
   }
 
   function onDragOver(e: DragEvent) {
-    if (e.dataTransfer?.types.includes('application/o3d-type')) {
+    if (e.dataTransfer?.types.some(type => type === 'application/o3d-type' || type === 'text/plain')) {
       e.preventDefault();
       if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
       const rect = canvas.getBoundingClientRect();
       const wp = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
-      const itemType = e.dataTransfer?.types.includes('application/o3d-type') ? 'item' : '';
       // Default preview size (furniture ~60x60cm, room ~400x300cm)
-      const isRoom = e.dataTransfer?.types.includes('application/o3d-type');
-      dragPreview = { x: wp.x, y: wp.y, type: itemType, width: 60, depth: 60 };
+      dragPreview = { x: wp.x, y: wp.y, type: 'item', width: 60, depth: 60 };
     }
   }
 
@@ -3598,9 +3597,9 @@
   function onDrop(e: DragEvent) {
     e.preventDefault();
     dragPreview = null;
-    const itemType = e.dataTransfer?.getData('application/o3d-type');
-    const itemId = e.dataTransfer?.getData('application/o3d-id');
-    if (!itemType || !itemId) return;
+    const payload = readCatalogDrag(e.dataTransfer);
+    if (!payload) return;
+    const { type: itemType, id: itemId } = payload;
 
     const rect = canvas.getBoundingClientRect();
     const sx = e.clientX - rect.left;

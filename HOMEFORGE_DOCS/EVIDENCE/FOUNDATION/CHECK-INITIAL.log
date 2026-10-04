@@ -1,0 +1,21 @@
+
+> open3dfloorplan@0.9.0 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\DEVELOPMENT\HOMEFORGE
+Getting Svelte diagnostics...
+
+c:\DEVELOPMENT\HOMEFORGE\tests\catalog-drag.test.ts:6:10
+Error: Conversion of type '{ readonly types: string[]; setData(type: string, value: string): void; getData(type: string): string; clearData(type: string): void; }' to type 'DataTransfer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ readonly types: string[]; setData(type: string, value: string): void; getData(type: string): string; clearData(type: string): void; }' is missing the following properties from type 'DataTransfer': dropEffect, effectAllowed, files, items, setDragImage 
+  const values = new Map<string, string>();
+  return {
+    get types() { return [...values.keys()]; },
+    setData(type: string, value: string) { values.set(type, value); },
+    getData(type: string) { return values.get(type) ?? ''; },
+    clearData(type: string) { values.delete(type); },
+  } as DataTransfer;
+}
+
+====================================
+svelte-check found 1 error and 0 warnings in 1 file

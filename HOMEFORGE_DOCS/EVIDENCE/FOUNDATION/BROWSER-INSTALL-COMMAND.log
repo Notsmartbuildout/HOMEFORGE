@@ -1,0 +1,4 @@
+
+> open3dfloorplan@0.9.0 install:browsers
+> node tooling/install-browsers.mjs chromium firefox webkit
+

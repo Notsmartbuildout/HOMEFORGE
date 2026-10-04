@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import { resolve } from 'node:path';
+
+// Keep browser binaries outside AppData, which packaged Windows hosts may redirect.
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve('.playwright-browsers');
 
 // Use the real Node production build. Each test gets an empty browser profile;
 // no credentials or Firebase services are needed.

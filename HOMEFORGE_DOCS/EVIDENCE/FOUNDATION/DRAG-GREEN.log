@@ -1,0 +1,13 @@
+
+> open3dfloorplan@0.9.0 test
+> vitest run tests/catalog-drag.test.ts
+
+
+ RUN  v5.0.0 C:/DEVELOPMENT/HOMEFORGE
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  16:19:54
+   Duration  349ms (transform 66%, setup 26%, worker 3%, import 3%, tests 3%)
+

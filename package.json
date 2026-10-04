@@ -24,7 +24,8 @@
 		"benchmark:fixtures": "node tooling/render-fixtures.mjs",
 		"catalog:manifest": "node tooling/catalog-manifest.mjs",
 		"catalog:check": "node tooling/catalog-manifest.mjs --check",
-		"build:render-lab": "vite build --config tooling/render-lab-site/vite.config.ts"
+		"build:render-lab": "vite build --config tooling/render-lab-site/vite.config.ts",
+		"install:browsers": "node tooling/install-browsers.mjs"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",
@@ -56,6 +57,13 @@
 	"overrides": {
 		"@sveltejs/kit": {
 			"cookie": "^0.7.2"
-		}
+		},
+		"@grpc/grpc-js": "^1.14.5"
+	},
+	"allowScripts": {
+		"esbuild@0.28.2": true,
+		"@firebase/util": false,
+		"core-js": false,
+		"protobufjs": false
 	}
 }

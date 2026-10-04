@@ -77,7 +77,11 @@ cacheTest('real cached validators cannot create a false update or hide a later d
     expect(cached).toBe(server.different);
     expect(server.requests.at(-1)?.status).toBe(304);
 
-    await page.clock.install();
+    // Freeze before navigation so pausing cannot race a one-second wall-clock
+    // deadline on a busy runner. advanceCheck explicitly runs the polling clock.
+    const clockStart = new Date('2026-09-07T12:00:00Z');
+    await page.clock.install({ time: clockStart });
+    await page.clock.pauseAt(new Date(clockStart.getTime() + 60_000));
     await page.goto(`${server.url}/editor?id=qa-deployment-cache`);
     await expect(page.getByRole('button', { name: /^(?:Save|Salvar)$/, exact: true })).toBeVisible();
     await expect(page.getByTitle(/^(?:Click\ to\ rename|Clique\ para\ renomear)$/, { exact: true })).toHaveText('QA Save Conflicts');
@@ -96,7 +100,6 @@ cacheTest('real cached validators cannot create a false update or hide a later d
 
     // Simulate loading the now-current build, retaining the old HTTP cache.
     server.serve(server.current);
-    await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 1000));
     await rename(page, 'Saved across deployment');
     expect((await savedProjects(page))['qa-deployment-cache'].name).not.toBe('Saved across deployment');
     await Promise.all([
