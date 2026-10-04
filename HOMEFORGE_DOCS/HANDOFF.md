@@ -4,7 +4,9 @@ Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repositor
 
 ## Current state
 
-The authorized Windows setup and remediation of known foundation errors are complete. The repository is ready for future development strategy. No HOMEFORGE homeowner features have been implemented.
+The authorized Windows setup and remediation of known foundation errors are complete. M1.1 Domain Foundation is implemented on `foundation-remediation`, with metadata types, validation, persistence and atomic Existing Conditions creation. No homeowner UI or editor mutation enforcement has been implemented. Jesse authorized committing the completed work and pushing this branch to the HOMEFORGE fork on 2026-10-04. See Git history for the implementation checkpoint; hosted deployment remains out of scope.
+
+Read [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the exact schema/API, migration, verification and M1.2/M2 planning requirements. Current M1.1 verification: 150 focused tests, all 1,211 unit tests in 127 files, and type checking with zero errors/warnings pass. M0 evidence below remains historical.
 
 - Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
 - `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
@@ -39,4 +41,4 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-Copy [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) into ChatGPT for planning, augmentation and a scoped Codex implementation prompt. Preserve accepted decisions in [PROJECT_CHARTER.md](PROJECT_CHARTER.md) and [ARCHITECTURE.md](ARCHITECTURE.md). M1/M2 homeowner navigation, independent variants and measurement verification remain planned; feature implementation requires its own task. Push only to the user's fork.
+Copy [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) together with [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) into ChatGPT for M1.2/M2 planning. Preserve accepted decisions in [PROJECT_CHARTER.md](PROJECT_CHARTER.md) and [ARCHITECTURE.md](ARCHITECTURE.md). Homeowner navigation, independent option variants and measurement verification remain planned; further feature implementation requires its own task. Do not push or publish without explicit authorization.

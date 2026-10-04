@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { IDBObjectStore } from 'fake-indexeddb';
 import { createLocalStore } from '$lib/services/datastore';
-import { DATABASE_NAME, PROJECTS_STORAGE_KEY as key, libraryBackup, readRecord, updateRecord } from '$lib/services/localDatabase';
+import { DATABASE_NAME, DATABASE_VERSION, PROJECTS_STORAGE_KEY as key, libraryBackup, readRecord, updateRecord } from '$lib/services/localDatabase';
 import { roomProject } from './fixtures/project';
 import { mockStorage, rawRecords, failWrites } from './fixtures/indexeddb';
 
@@ -124,7 +124,7 @@ it('reports denied IndexedDB access without writing or erasing legacy data', asy
 it('closes its connections so a database upgrade is not blocked after a save', async () => {
   await createLocalStore().save(roomProject());
   await new Promise<void>((resolve, reject) => {
-    const req = indexedDB.open(DATABASE_NAME, 2);
+    const req = indexedDB.open(DATABASE_NAME, DATABASE_VERSION + 1);
     req.onblocked = () => reject(new Error('Connection leaked'));
     req.onerror = () => reject(req.error);
     req.onsuccess = () => { req.result.close(); resolve(); };

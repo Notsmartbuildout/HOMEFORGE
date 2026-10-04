@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 
 export async function storedRecords(page: Page, store = 'projects'): Promise<Record<string, string>> {
   return page.evaluate(store => new Promise((resolve, reject) => {
-    const open = indexedDB.open('openplan3d-local', 1);
+    const open = indexedDB.open('openplan3d-local');
     let failed = false;
     const fail = (error: unknown) => { failed = true; reject(error); };
     // Observation must never create an empty database ahead of app hydration.

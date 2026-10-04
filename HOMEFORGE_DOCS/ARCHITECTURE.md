@@ -4,7 +4,7 @@ Foundation: MIT-licensed laanlabs/openPlan3D. Preserve upstream notices and hist
 
 Existing stack: SvelteKit / Svelte 5 / TypeScript / Canvas 2D / Three.js / IndexedDB; Node 24 tooling and adapter-node production build.
 
-Wrap the existing Project → Floor model rather than replacing it. Proposed HomeWorkspace → RenovationProject → DesignVariant → upstream Project. Keep references to Spaces in the wrapper; postpone cross-project shared geometry.
+Wrap the existing Project → Floor model rather than replacing it. M1.1 implements HomeWorkspace → RenovationProject → DesignVariant → upstream Project ID in a separate IndexedDB metadata store. See [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for schema, API, validation and additive database migration. Keep references to Spaces in the wrapper for future work; postpone cross-project shared geometry.
 
 Design alternatives are independent deep copies, including project-owned assets. The baseline is protected from accidental edits; intentional baseline correction needs an explicit action. Variant switching must complete persistence and reset editor selection/history appropriately. Stable IDs, schema versioning, migration and transactional writes are requirements before implementation.
 

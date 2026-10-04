@@ -4,7 +4,9 @@ export const DATABASE_NAME = 'openplan3d-local';
 export const PROJECTS_STORAGE_KEY = 'floorplan_projects';
 export const LIBRARY_CHANGE_KEY = 'openplan3d-library-change';
 export const STORES = ['projects', 'thumbnails', 'history', 'meta'] as const;
-export type StoreName = typeof STORES[number];
+export const DATABASE_VERSION = 2;
+export const HOMEFORGE_STORE = 'homeforgeWorkspaces';
+export type StoreName = typeof STORES[number] | typeof HOMEFORGE_STORE;
 type Legacy = Record<string, string>;
 
 export function request<T>(req: IDBRequest<T>): Promise<T> {
@@ -17,11 +19,13 @@ export function request<T>(req: IDBRequest<T>): Promise<T> {
 async function openDatabase(): Promise<IDBDatabase> {
   if (typeof indexedDB === 'undefined') throw new Error('Browser storage is unavailable. Allow site storage or download your project as JSON.');
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DATABASE_NAME, 1);
+    const req = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     let blocked = false;
-    req.onupgradeneeded = () => {
+    req.onupgradeneeded = (event) => {
       if (blocked) { req.transaction?.abort(); return; }
-      for (const name of STORES) req.result.createObjectStore(name);
+      // Explicit additive migrations; inherited records and recovery bytes stay intact.
+      if (event.oldVersion < 1) for (const name of STORES) req.result.createObjectStore(name);
+      if (event.oldVersion < 2) req.result.createObjectStore(HOMEFORGE_STORE);
     };
     req.onblocked = () => {
       blocked = true;
