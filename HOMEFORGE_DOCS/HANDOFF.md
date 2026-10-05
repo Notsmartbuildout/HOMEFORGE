@@ -41,6 +41,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-M1.3 is published as `8ca4d62`. M2.1's one-baseline invariant is verified with 1,230 unit tests and zero type errors/warnings; see [M2_1_EXISTING_CONDITIONS.md](M2_1_EXISTING_CONDITIONS.md). Continue with M2.2; the milestones below remain the authorized sequence.
+M1.3 is published as `8ca4d62`, M2.1 as `b15ae2c`. M2.2's complete option duplication service is verified with 1,236 unit tests and zero type errors/warnings; see [M2_2_CLONE_TO_OPTION.md](M2_2_CLONE_TO_OPTION.md). Continue with M2.3 creation/switching UI; the milestones below remain the authorized sequence.
 
 Continue the authorized sequence in [M2_IMPLEMENTATION_PLAN.md](M2_IMPLEMENTATION_PLAN.md), committing and pushing each verified milestone to the owner's fork. Independent options, baseline correction/enforcement and resilience are the remaining authorized milestones. Measurement/AI/native-scanner work and hosted deployment remain outside this objective.

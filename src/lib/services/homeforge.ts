@@ -1,12 +1,20 @@
-import type { HomeWorkspace, RenovationProject } from '$lib/models/homeforge';
+import type { DesignVariant, HomeWorkspace, RenovationProject } from '$lib/models/homeforge';
 import type { Project } from '$lib/models/types';
 import { createDefaultProject } from '$lib/stores/project';
 import { readHomeWorkspace } from '$lib/utils/homeforgeValidation';
 import { readProject } from '$lib/utils/projectValidation';
 import { parseBackup } from '$lib/utils/parseBackup';
+import { readSnapshotStorage, writeSnapshotStorage } from '$lib/utils/snapshotStorage';
 import { HOMEFORGE_STORE, notifyLibraryChange, records, request, transaction, withDatabase } from './localDatabase';
 
 const newId = () => globalThis.crypto?.randomUUID?.() ?? `homeforge-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+function allocateId(used: Set<string>) {
+  for (let i = 0; i < 5; i++) {
+    const id = newId();
+    if (!used.has(id)) { used.add(id); return id; }
+  }
+  throw new Error('Could not allocate a unique HOMEFORGE ID. Retry creation.');
+}
 
 export function createHomeWorkspace(name: string): HomeWorkspace {
   const now = new Date();
@@ -75,6 +83,53 @@ export function createHomeforgeStore() {
       revisions.set(id, null);
       notifyLibraryChange(id);
     },
+    /** Copy complete saved state; one commit owns geometry, history and relationships. */
+    async cloneVariant(workspaceId: string, renovationId: string, sourceVariantId: string, name: string, expectedProject?: Project): Promise<DesignVariant> {
+      if (typeof name !== 'string' || !name.trim()) throw new Error('Option name must be nonempty text.');
+      const expected = expectedProject === undefined ? undefined : JSON.stringify(readProject(expectedProject));
+      const result = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, 'projects', 'thumbnails', 'history'], 'readwrite', async tx => {
+        const metadata = tx.objectStore(HOMEFORGE_STORE), projects = tx.objectStore('projects');
+        const stored = (await request(metadata.get(workspaceId))) ?? null;
+        check(workspaceId, stored);
+        if (stored === null) throw new Error('HOMEFORGE workspace is missing.');
+        const workspace = decode(stored, workspaceId), renovation = workspace.renovationProjects.find(r => r.id === renovationId);
+        const source = renovation?.variants.find(v => v.id === sourceVariantId);
+        if (!renovation || !source) throw new Error('Source variant is missing. Reload before creating an option.');
+        const copy = referencedProject(await request(projects.get(source.projectId)), source.projectId);
+        if (expected !== undefined && JSON.stringify(copy) !== expected) throw new Error('Source project changed. Reload before creating an option.');
+        const used = new Set([workspace.id, ...workspace.renovationProjects.flatMap(r => [r.id, ...r.variants.flatMap(v => [v.id, v.projectId])]),
+          ...(await request(projects.getAllKeys())).map(String)]);
+        copy.id = allocateId(used); copy.name = name;
+        const now = new Date(Math.max(Date.now(), workspace.updatedAt.getTime(), renovation.updatedAt.getTime(), copy.updatedAt.getTime()));
+        copy.createdAt = copy.updatedAt = now;
+        const variant: DesignVariant = { id: allocateId(used), name, kind: 'option', projectId: copy.id,
+          createdFromVariantId: source.id, baselineProtected: false, createdAt: now, updatedAt: now };
+        const history = tx.objectStore('history'), historyRaw = await request(history.get(source.projectId));
+        let copiedHistory: string | undefined;
+        if (historyRaw !== undefined) {
+          try {
+            const snapshots = readSnapshotStorage(historyRaw) as any[];
+            copiedHistory = writeSnapshotStorage(snapshots.map(item => {
+              if (!item || typeof item.timestamp !== 'number' || !Number.isFinite(item.timestamp) ||
+                  typeof item.description !== 'string' || typeof item.data !== 'string') throw new Error();
+              const project = referencedProject(item.data, source.projectId);
+              project.id = copy.id; project.name = name;
+              return { timestamp: item.timestamp, description: item.description, data: JSON.stringify(project) };
+            }));
+          } catch { throw new Error('Source version history is unreadable. Download a HOMEFORGE backup for recovery before creating an option.'); }
+        }
+        const thumbnail = await request(tx.objectStore('thumbnails').get(source.projectId));
+        renovation.variants.push(variant); renovation.updatedAt = workspace.updatedAt = now;
+        const raw = JSON.stringify(readHomeWorkspace(workspace));
+        await request(projects.add(JSON.stringify(copy), copy.id));
+        if (thumbnail !== undefined) await request(tx.objectStore('thumbnails').add(thumbnail, copy.id));
+        if (copiedHistory !== undefined) await request(history.add(copiedHistory, copy.id));
+        await request(metadata.put(raw, workspace.id));
+        return { variant, raw };
+      }));
+      revisions.set(workspaceId, result.raw); notifyLibraryChange(workspaceId);
+      return result.variant;
+    },
     async createRenovationProject(workspaceId: string, input: CreateRenovationInput): Promise<RenovationProject> {
       // Clone input before asynchronous storage work. Never open or mutate the editor.
       if (input.project !== undefined && input.projectId !== undefined) throw new Error('Choose an upstream project or projectId, not both.');
@@ -87,13 +142,7 @@ export function createHomeforgeStore() {
         if (existing === undefined) throw new Error('HOMEFORGE workspace is missing. Save it before creating a renovation project.');
         const workspace = decode(existing, workspaceId);
         const used = new Set([workspace.id, ...workspace.renovationProjects.flatMap(r => [r.id, ...r.variants.flatMap(v => [v.id, v.projectId])])]);
-        const allocate = () => {
-          for (let i = 0; i < 5; i++) {
-            const id = newId();
-            if (!used.has(id)) { used.add(id); return id; }
-          }
-          throw new Error('Could not allocate a unique HOMEFORGE ID. Retry creation.');
-        };
+        const allocate = () => allocateId(used);
         let projectId: string;
         if (candidate) {
           if (supplied) {

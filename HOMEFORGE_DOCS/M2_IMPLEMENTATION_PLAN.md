@@ -17,7 +17,7 @@ Reuse the HOMEFORGE metadata store and inherited project validation, duplication
 Each milestone adds focused regressions, runs `npm run check` and `npm test`, and commits/pushes only after passing. Build and run focused production browser cases for UI changes across desktop/mobile and the three configured engines. Record actual results and checkpoint IDs in durable handoffs. Reuse previous evidence for unchanged areas; do not repeat the broad historical browser baseline.
 
 - [x] M2.1 invariant and checkpoint — see M2_1_EXISTING_CONDITIONS.md
-- [ ] M2.2 complete clone and checkpoint
+- [x] M2.2 complete clone and checkpoint — see M2_2_CLONE_TO_OPTION.md
 - [ ] M2.3 save/load/reset and checkpoint
 - [ ] M2.4 protection/correction and checkpoint
 - [ ] M2.5 resilience audit and checkpoint

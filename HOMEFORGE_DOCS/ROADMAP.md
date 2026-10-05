@@ -7,6 +7,7 @@
 - M1.3: editor identity and save-before-return navigation implemented and verified: 1,228 unit tests, 33 targeted browser cases, type checking and production build pass. See M1_3_EDITOR_CONTEXT.md.
 - M2: Existing / Option A / Option B with independent state, durable assets and persistence tests.
 - M2.1: exactly one Existing baseline per validated renovation; options do not change its pointer. 75 focused tests, 1,230 unit tests and type checking pass. See M2_1_EXISTING_CONDITIONS.md.
+- M2.2: atomic complete option duplication service including inline assets, thumbnail and remapped valid history. 93 focused tests, 1,236 unit tests and type checking pass. Editor integration follows in M2.3. See M2_2_CLONE_TO_OPTION.md.
 - M3: direct manipulation and concise numeric property editing.
 - M4: import/calibration and dimension-level provenance, with invalidation rules.
 - M5: measured front-entry and stair workflow, useful elevation output, export review and recovery tests.
