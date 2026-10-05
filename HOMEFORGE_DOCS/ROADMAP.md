@@ -6,6 +6,7 @@
 - M1.2: committed/pushed as `39ca141`: coordinated HOMEFORGE backup/restore, reference-safe deletion and minimal homeowner dashboard with exact Existing Conditions opening and recovery states. See M1_2_COMPLETE.md.
 - M1.3: editor identity and save-before-return navigation implemented and verified: 1,228 unit tests, 33 targeted browser cases, type checking and production build pass. See M1_3_EDITOR_CONTEXT.md.
 - M2: Existing / Option A / Option B with independent state, durable assets and persistence tests.
+- M2.1: exactly one Existing baseline per validated renovation; options do not change its pointer. 75 focused tests, 1,230 unit tests and type checking pass. See M2_1_EXISTING_CONDITIONS.md.
 - M3: direct manipulation and concise numeric property editing.
 - M4: import/calibration and dimension-level provenance, with invalidation rules.
 - M5: measured front-entry and stair workflow, useful elevation output, export review and recovery tests.

@@ -52,6 +52,7 @@ export function readHomeWorkspace(value: unknown): HomeWorkspace {
       if (variant.createdFromVariantId !== undefined) text(variant.createdFromVariantId, `${variantPath}.createdFromVariantId`);
       dates(variant, variantPath);
     }
+    if (variants.filter(v => v.kind === 'existing').length !== 1) fail(`${path}.variants`, 'must contain exactly one Existing variant');
     if (!variants.some(v => v.id === renovation.existingVariantId && v.kind === 'existing')) fail(`${path}.existingVariantId`, 'must reference an existing variant');
     if (!ids.has(renovation.activeVariantId)) fail(`${path}.activeVariantId`, 'must reference a variant');
     for (const variant of variants) if (variant.createdFromVariantId !== undefined && (!ids.has(variant.createdFromVariantId) || variant.createdFromVariantId === variant.id)) fail(`${path}.createdFromVariantId`, 'must reference another variant');

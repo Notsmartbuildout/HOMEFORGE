@@ -8,6 +8,28 @@ import { roomProject } from './fixtures/project';
 
 beforeEach(() => { mockStorage(); });
 
+it('rejects a second Existing variant rather than guessing the baseline', async () => {
+  const store = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await store.save(workspace);
+  await store.createRenovationProject(workspace.id, { name: 'Entry' });
+  const saved = (await store.load(workspace.id))!, renovation = saved.renovationProjects[0];
+  renovation.variants.push({ ...renovation.variants[0], id: 'second-existing' });
+  expect(() => readHomeWorkspace(saved)).toThrow(/exactly one Existing/);
+  await expect(store.save(saved)).rejects.toThrow(/exactly one Existing/);
+  await putRaw('homeforgeWorkspaces', workspace.id, JSON.stringify(saved));
+  await expect(createHomeforgeStore().load(workspace.id)).rejects.toThrow(/exactly one Existing/);
+});
+
+it('retains exactly one baseline while allowing independent option variants', async () => {
+  const store = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await store.save(workspace);
+  await store.createRenovationProject(workspace.id, { name: 'Entry' });
+  const saved = (await store.load(workspace.id))!, renovation = saved.renovationProjects[0];
+  renovation.variants.push({ ...renovation.variants[0], id: 'option-a', name: 'Option A', kind: 'option', projectId: 'option-project', baselineProtected: false, createdFromVariantId: renovation.existingVariantId });
+  renovation.activeVariantId = 'option-a';
+  const validated = readHomeWorkspace(saved).renovationProjects[0];
+  expect(validated.variants.filter(v => v.kind === 'existing')).toHaveLength(1);
+  expect(validated.existingVariantId).not.toBe(validated.activeVariantId);
+});
+
 async function fixture() {
   const store = createHomeforgeStore(), workspace = createHomeWorkspace('My home');
   await store.save(workspace);
