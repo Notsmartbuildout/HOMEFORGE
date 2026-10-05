@@ -36,19 +36,23 @@ export function readHomeforgeDashboard() {
 }
 
 /** Resolve a saved Existing Conditions reference without changing editor state. */
-export async function resolveExistingProjectId(workspaceId: string, renovationId: string): Promise<string> {
+export async function resolveHomeforgeEditorContext(workspaceId: string, renovationId: string) {
   try {
     return await withDatabase(db => transaction(db, ['homeforgeWorkspaces', 'projects'], 'readonly', async tx => {
       const raw = await request(tx.objectStore('homeforgeWorkspaces').get(workspaceId));
       const workspace = workspaceRecord(raw, workspaceId);
       const renovation = workspace.renovationProjects.find(r => r.id === renovationId);
       const variant = renovation?.variants.find(v => v.id === renovation.existingVariantId && v.kind === 'existing');
-      if (!variant) throw new Error();
+      if (!renovation || !variant) throw new Error();
       const project = readProject(JSON.parse(await request(tx.objectStore('projects').get(variant.projectId))));
       if (project.id !== variant.projectId) throw new Error();
-      return variant.projectId;
+      return { workspaceId: workspace.id, workspaceName: workspace.name, renovationId: renovation.id, renovationName: renovation.name, variant };
     }));
   } catch {
     throw new Error('Existing Conditions could not be opened. Its workspace metadata or saved plan is missing or unreadable. Return to HOMEFORGE and download a backup for recovery.');
   }
+}
+
+export async function resolveExistingProjectId(workspaceId: string, renovationId: string): Promise<string> {
+  return (await resolveHomeforgeEditorContext(workspaceId, renovationId)).variant.projectId;
 }

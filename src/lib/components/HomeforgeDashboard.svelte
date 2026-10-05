@@ -44,6 +44,8 @@
   }
   $effect(() => { revision; void refreshSafely(); });
   onMount(() => {
+    const requestedWorkspace = new URL(window.location.href).searchParams.get('workspace');
+    if (requestedWorkspace) selectedId = requestedWorkspace;
     const focus = () => { void refreshSafely(); };
     const storage = (event: StorageEvent) => { if (event.key === LIBRARY_CHANGE_KEY) focus(); };
     window.addEventListener('focus', focus); window.addEventListener('storage', storage);
@@ -109,7 +111,7 @@
   </div>
   {#if error}<p role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-900">{error}</p>{/if}
   {#each issues as issue}<p role="alert" class="mt-3 break-words rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{issue.message} Workspace: {issue.id}</p>{/each}
-  {#if loading}<p role="status" class="mt-4 text-sm text-gray-500">Loading workspaces…</p>{/if}
+  {#if loading && !workspaces.length}<p role="status" class="mt-4 text-sm text-gray-500">Loading workspaces…</p>{/if}
   {#if busy}<p role="status" class="mt-4 text-sm text-gray-500">Saving HOMEFORGE changes…</p>{/if}
 
   {#if workspaceForm}

@@ -34,8 +34,16 @@ for (const width of [1440, 390]) {
     await page.getByRole('article', { name: 'Front entry', exact: true }).getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`id=${encodeURIComponent(id)}`));
     await expect(page.getByRole('application')).toBeVisible();
+    const identity = page.getByRole('navigation', { name: 'HOMEFORGE editor context' });
+    await expect(identity).toContainText('My home');
+    await expect(identity).toContainText('Front entry');
+    await expect(identity).toContainText('Existing Conditions');
+    if (testInfo.project.name === 'chromium' && width === 1440)
+      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M1_3_EDITOR.png' });
     expect(Object.keys(await savedProjects(page))).toEqual(Object.keys(before)); expect(errors).toEqual([]);
     expect((await savedProjects(page))[id].floors).toEqual(before[id].floors);
+    await identity.getByRole('button', { name: 'Return to renovations' }).click();
+    await expect(page.getByRole('article', { name: 'Front entry', exact: true })).toBeVisible();
   });
 
   test(`HOMEFORGE backup restores independent workspace copies at ${width}px`, async ({ page }) => {
@@ -86,6 +94,49 @@ test('unchanged workspace selection retains a renovation draft', async ({ page }
   await page.getByLabel('Renovation name', { exact: true }).fill('Draft entry');
   await page.getByLabel('Home workspace', { exact: true }).selectOption(workspace.id);
   await expect(page.getByLabel('Renovation name', { exact: true })).toHaveValue('Draft entry');
+});
+
+test('background refresh does not move the renovation opening link during a click', async ({ page }) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  await expect(page.getByRole('status').filter({ hasText: 'Loading workspaces' })).toHaveCount(0);
+  const bounds = await page.evaluate(async () => {
+    const link = [...document.querySelectorAll('a')].find(a => a.textContent === 'Open Existing Conditions')!;
+    const before = link.getBoundingClientRect().y;
+    window.dispatchEvent(new Event('focus'));
+    await Promise.resolve(); await Promise.resolve();
+    return { before, after: link.getBoundingClientRect().y };
+  });
+  expect(bounds.after).toBe(bounds.before);
+});
+
+test('editor return retains unsaved edits when persistence fails and recovers after retry', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await expect(page.getByRole('application')).toBeVisible();
+  await page.evaluate(() => {
+    (window as any).homeforgeSaveFailure = true;
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === 'projects' && (window as any).homeforgeSaveFailure) throw new DOMException('Full', 'QuotaExceededError');
+      return original.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: 'Front entry', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Corrected entry');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  await page.getByRole('button', { name: 'Return to renovations' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
+  await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
+  const drawerTop = await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top);
+  expect(drawerTop).toBe(96);
+  await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
+  await expect(page).toHaveURL(/\/editor/);
+  await expect(page.getByRole('button', { name: 'Corrected entry', exact: true })).toBeVisible();
+  await page.evaluate(() => { (window as any).homeforgeSaveFailure = false; });
+  await page.getByRole('button', { name: 'Return to renovations' }).click();
+  await expect(page.getByRole('article', { name: 'Front entry', exact: true })).toBeVisible();
+  expect(Object.values(await savedProjects(page))[0].name).toBe('Corrected entry');
 });
 
 test('a committed creation blocks further mutations until a failed refresh recovers', async ({ page }) => {

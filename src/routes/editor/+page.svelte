@@ -6,12 +6,12 @@
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { base } from '$app/paths';
-  import { replaceState } from '$app/navigation';
+  import { goto, replaceState } from '$app/navigation';
   import { page } from '$app/state';
   import { reportLoadingFailure } from '$lib/services/deployment';
   import { currentProject, viewMode, selectedElementId, selectedRoomId, createDefaultProject, loadProject, selectedTool, placingFurnitureId, elevationWallId, elevationPickMode } from '$lib/stores/project';
   import { localStore, storageErrorMessage, downloadLibraryBackup, downloadHomeforgeBackup } from '$lib/services/datastore';
-  import { resolveExistingProjectId } from '$lib/services/homeforgeDashboard';
+  import { resolveHomeforgeEditorContext } from '$lib/services/homeforgeDashboard';
   import { autoSave, markClean, saveState } from '$lib/stores/saveStatus';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
   import TopBar from '$lib/components/toolbar/TopBar.svelte';
@@ -70,6 +70,19 @@
   let importingCapture = $state(false);
   let importError = $state<string | CaptureImportError | null>(null);
   let loadError = $state<string | null>(null);
+  let homeforgeContext = $state<Awaited<ReturnType<typeof resolveHomeforgeEditorContext>> | null>(null);
+  let returning = $state(false), navigationError = $state<string | null>(null);
+
+  async function returnToRenovations() {
+    if (returning || !homeforgeContext) return;
+    returning = true; navigationError = null;
+    try {
+      if (get(saveState) !== 'saved' && (!await autoSave() || get(saveState) !== 'saved'))
+        throw new Error('Your latest edits could not be saved. Resolve the save error before returning to renovations.');
+      await goto(`${base}/?workspace=${encodeURIComponent(homeforgeContext.workspaceId)}`);
+    } catch (error) { navigationError = storageErrorMessage(error); }
+    finally { returning = false; }
+  }
 
   async function backupLibrary() {
     try {
@@ -156,8 +169,11 @@
       const homeforge = url.searchParams.has('homeforge');
       if (homeforge) {
         const workspace = url.searchParams.get('workspace'), renovation = url.searchParams.get('renovation');
-        if (!id || !workspace || !renovation || await resolveExistingProjectId(workspace, renovation) !== id)
+        if (!id || !workspace || !renovation)
           throw new Error('Existing Conditions reference is missing or does not match this editor link. Return to HOMEFORGE for recovery.');
+        const context = await resolveHomeforgeEditorContext(workspace, renovation);
+        if (context.variant.projectId !== id) throw new Error('Existing Conditions reference does not match this editor link. Return to HOMEFORGE for recovery.');
+        homeforgeContext = context;
       }
       if (id) {
         // A new/imported project may exist only in memory if its first save failed.
@@ -197,6 +213,7 @@
       url.searchParams.delete('import');
       // Imports change the active upstream project; discard the old wrapper link.
       url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation');
+      homeforgeContext = null;
       url.searchParams.set('id', project.id);
       replaceState(url, page.state);
     });
@@ -236,7 +253,15 @@
 <svelte:window on:keydown={onEditorKeydown} />
 
 {#if ready}
-  <div class="h-screen flex flex-col overflow-hidden">
+  <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? '6rem' : '3rem'}>
+    {#if homeforgeContext}
+      <nav aria-label="HOMEFORGE editor context" class="h-12 shrink-0 flex items-center gap-3 px-3 bg-slate-100 border-b border-slate-200 text-sm">
+        <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={returnToRenovations}>Return to renovations</button>
+        <span class="min-w-0 truncate" title={`${homeforgeContext.workspaceName} / ${homeforgeContext.renovationName} / ${homeforgeContext.variant.name}`}>
+          {homeforgeContext.workspaceName} / <strong>{homeforgeContext.renovationName}</strong> / {homeforgeContext.variant.name}
+        </span>
+      </nav>
+    {/if}
     <TopBar onToggleLayers={() => showLayers = !showLayers} layersOpen={showLayers} onToggleHistory={toggleHistory} historyOpen={showUndoHistory} />
     <!-- Keep canvas/viewer controls beneath toolbar menus and project dialogs. -->
     <div class="flex flex-1 overflow-hidden isolate">
@@ -244,12 +269,12 @@
         <!-- Build panel: inline sidebar on md+, off-canvas drawer on phones -->
         {#if buildPanelOpen}
           <div
-            class="md:hidden fixed inset-x-0 top-12 bottom-0 bg-black/40 z-40"
+            class="md:hidden fixed inset-x-0 top-[var(--editor-top)] bottom-0 bg-black/40 z-40"
             onclick={() => buildPanelOpen = false}
             aria-hidden="true"
           ></div>
         {/if}
-        <div class="h-full max-md:fixed max-md:left-0 max-md:top-12 max-md:bottom-0 max-md:h-auto max-md:z-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-200 {buildPanelOpen ? '' : 'max-md:-translate-x-full'}">
+        <div class="h-full max-md:fixed max-md:left-0 max-md:top-[var(--editor-top)] max-md:bottom-0 max-md:h-auto max-md:z-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-200 {buildPanelOpen ? '' : 'max-md:-translate-x-full'}">
           <BuildPanel />
         </div>
       {/if}
@@ -275,6 +300,8 @@
       <PropertiesPanel is3D={mode === '3d'} />
     </div>
   </div>
+
+  {#if navigationError}<p role="alert" class="fixed bottom-20 inset-x-4 z-[60] rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm shadow-lg">{navigationError}</p>{/if}
 
   <!-- Tools drawer FAB (mobile only) -->
   {#if mode === '2d'}

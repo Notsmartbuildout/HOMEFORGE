@@ -4,9 +4,9 @@ Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repositor
 
 ## Current state
 
-The authorized Windows setup and known-error remediation are complete. M1.1 Domain Foundation and its M1.2 proposal were committed and pushed to the fork. M1.2 is now implemented locally on `foundation-remediation`: portable recovery, referenced-project deletion protection and a minimal homeowner dashboard. M1.2 changes are uncommitted and have not been pushed. Baseline editor mutation enforcement and options remain pending; hosted deployment remains out of scope.
+The authorized Windows setup and known-error remediation are complete. M1.1 and M1.2 are committed and pushed to the fork; M1.2 checkpoint is `39ca141`. M1.3 adds editor identity and safe return navigation, with verified results in [M1_3_EDITOR_CONTEXT.md](M1_3_EDITOR_CONTEXT.md). Jesse's continuing milestone objective authorizes implementation and commit/push checkpoints through M2.5. Baseline enforcement and options remain pending; hosted deployment remains out of scope.
 
-Read [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for current APIs, recovery behavior and M2 planning constraints, and [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the underlying domain/schema migration. Current verification: 98 focused tests, all 1,227 unit tests in 129 files, 36 targeted browser cases across three engines, production build and type checking with zero errors/warnings pass. M0 evidence below remains historical.
+Read [M1_3_EDITOR_CONTEXT.md](M1_3_EDITOR_CONTEXT.md) and [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for APIs/recovery behavior, and [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the domain/schema migration. Current verification: all 1,228 unit tests in 129 files, 33 targeted HOMEFORGE browser cases across three engines, production build and type checking with zero errors/warnings pass. M0 evidence below remains historical.
 
 - Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
 - `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
@@ -41,4 +41,4 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-Copy [M1_2_COMPLETE.md](M1_2_COMPLETE.md) together with [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) into ChatGPT for M2 planning. Preserve accepted decisions in [PROJECT_CHARTER.md](PROJECT_CHARTER.md) and [ARCHITECTURE.md](ARCHITECTURE.md). Independent option variants, baseline correction/enforcement and measurement verification remain planned; further feature implementation requires its own task. Do not push or publish without explicit authorization.
+Continue the authorized sequence in [M2_IMPLEMENTATION_PLAN.md](M2_IMPLEMENTATION_PLAN.md), committing and pushing each verified milestone to the owner's fork. Independent options, baseline correction/enforcement and resilience are the remaining authorized milestones. Measurement/AI/native-scanner work and hosted deployment remain outside this objective.

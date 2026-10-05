@@ -1,9 +1,20 @@
 import { beforeEach, expect, it } from 'vitest';
 import { createHomeWorkspace, createHomeforgeStore } from '$lib/services/homeforge';
-import { readHomeforgeDashboard, resolveExistingProjectId } from '$lib/services/homeforgeDashboard';
+import { readHomeforgeDashboard, resolveExistingProjectId, resolveHomeforgeEditorContext } from '$lib/services/homeforgeDashboard';
 import { mockStorage, putRaw } from './fixtures/indexeddb';
 import { updateRecord } from '$lib/services/localDatabase';
 beforeEach(() => { mockStorage(); });
+
+it('resolves validated editor identity without changing wrapper or geometry', async () => {
+  const client = createHomeforgeStore(), workspace = createHomeWorkspace('My home'); await client.save(workspace);
+  const renovation = await client.createRenovationProject(workspace.id, { name: 'Entry' });
+  const context = await resolveHomeforgeEditorContext(workspace.id, renovation.id);
+  expect(context.workspaceName).toBe('My home');
+  expect(context.renovationName).toBe('Entry');
+  expect(context.variant.name).toBe('Existing Conditions');
+  expect(context.variant.projectId).toBe(renovation.variants[0].projectId);
+  expect(await client.load(workspace.id)).toEqual({ ...workspace, renovationProjects: [renovation], updatedAt: renovation.updatedAt });
+});
 
 it('keeps healthy workspaces visible alongside unreadable metadata and reports missing geometry', async () => {
   const client = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await client.save(workspace);
