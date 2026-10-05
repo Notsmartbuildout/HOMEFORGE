@@ -10,7 +10,8 @@
   import { page } from '$app/state';
   import { reportLoadingFailure } from '$lib/services/deployment';
   import { currentProject, viewMode, selectedElementId, selectedRoomId, createDefaultProject, loadProject, selectedTool, placingFurnitureId, elevationWallId, elevationPickMode } from '$lib/stores/project';
-  import { localStore, storageErrorMessage, downloadLibraryBackup } from '$lib/services/datastore';
+  import { localStore, storageErrorMessage, downloadLibraryBackup, downloadHomeforgeBackup } from '$lib/services/datastore';
+  import { resolveExistingProjectId } from '$lib/services/homeforgeDashboard';
   import { autoSave, markClean, saveState } from '$lib/stores/saveStatus';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
   import TopBar from '$lib/components/toolbar/TopBar.svelte';
@@ -71,7 +72,10 @@
   let loadError = $state<string | null>(null);
 
   async function backupLibrary() {
-    try { await downloadLibraryBackup(); }
+    try {
+      if (new URL(window.location.href).searchParams.has('homeforge')) await downloadHomeforgeBackup();
+      else await downloadLibraryBackup();
+    }
     catch (error) { loadError = storageErrorMessage(error); }
   }
 
@@ -149,6 +153,12 @@
       }
 
       const id = url.searchParams.get('id');
+      const homeforge = url.searchParams.has('homeforge');
+      if (homeforge) {
+        const workspace = url.searchParams.get('workspace'), renovation = url.searchParams.get('renovation');
+        if (!id || !workspace || !renovation || await resolveExistingProjectId(workspace, renovation) !== id)
+          throw new Error('Existing Conditions reference is missing or does not match this editor link. Return to HOMEFORGE for recovery.');
+      }
       if (id) {
         // A new/imported project may exist only in memory if its first save failed.
         const pending = get(currentProject);
@@ -158,6 +168,7 @@
           loadProject(project);
           markClean();
         } else {
+          if (homeforge) throw new Error('Existing Conditions saved plan is missing. Return to HOMEFORGE for recovery.');
           const p = createDefaultProject();
           loadProject(p);
           await autoSave();
@@ -184,6 +195,8 @@
       const url = new URL(window.location.href);
       if (url.searchParams.get('id') === project.id) return;
       url.searchParams.delete('import');
+      // Imports change the active upstream project; discard the old wrapper link.
+      url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation');
       url.searchParams.set('id', project.id);
       replaceState(url, page.state);
     });

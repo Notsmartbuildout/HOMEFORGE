@@ -3,6 +3,7 @@ import type { Project } from '$lib/models/types';
 import { createDefaultProject } from '$lib/stores/project';
 import { readHomeWorkspace } from '$lib/utils/homeforgeValidation';
 import { readProject } from '$lib/utils/projectValidation';
+import { parseBackup } from '$lib/utils/parseBackup';
 import { HOMEFORGE_STORE, notifyLibraryChange, records, request, transaction, withDatabase } from './localDatabase';
 
 const newId = () => globalThis.crypto?.randomUUID?.() ?? `homeforge-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -20,7 +21,7 @@ export type CreateRenovationInput = { name: string; description?: string } & (
 
 function decode(raw: string, id: string): HomeWorkspace {
   let value: unknown;
-  try { value = JSON.parse(raw); } catch { throw new Error('Invalid HOMEFORGE metadata: unreadable JSON.'); }
+  try { value = parseBackup(raw); } catch { throw new Error('Invalid HOMEFORGE metadata: unreadable or ambiguous JSON.'); }
   const workspace = readHomeWorkspace(value);
   if (workspace.id !== id) throw new Error('Invalid HOMEFORGE metadata: ID does not match its storage key.');
   return workspace;

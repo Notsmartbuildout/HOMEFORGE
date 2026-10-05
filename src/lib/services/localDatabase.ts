@@ -186,24 +186,30 @@ export async function records(tx: IDBTransaction, name: StoreName): Promise<Reco
 }
 
 /** Recovery deliberately bypasses migration and validation, including damaged bytes. */
-export async function libraryBackup(): Promise<string> {
+async function backup(includeHomeforge: boolean): Promise<string> {
   const db = await openDatabase();
   try {
-    return await transaction(db, [...STORES], 'readonly', async tx => {
+    return await transaction(db, includeHomeforge ? [...STORES, HOMEFORGE_STORE] : [...STORES], 'readonly', async tx => {
       const [projects, thumbnails, history, original, previous, meta] = await Promise.all([
         records(tx, 'projects'), records(tx, 'thumbnails'), records(tx, 'history'),
         request(tx.objectStore('meta').get('legacy-original')), request(tx.objectStore('meta').get('legacy-current')),
         records(tx, 'meta'),
       ]);
+      const workspaces = includeHomeforge ? await records(tx, HOMEFORGE_STORE) : undefined;
       const current = legacyStorage();
-      if (!original && !Object.keys(projects).length && current[PROJECTS_STORAGE_KEY] !== undefined) return current[PROJECTS_STORAGE_KEY];
-      return JSON.stringify({ format: 'openplan3d-library', version: 1, projects, thumbnails, history,
+      if (!includeHomeforge && !original && !Object.keys(projects).length && current[PROJECTS_STORAGE_KEY] !== undefined) return current[PROJECTS_STORAGE_KEY];
+      return JSON.stringify({ format: includeHomeforge ? 'homeforge-library' : 'openplan3d-library', version: 1, projects, thumbnails, history,
+        ...(includeHomeforge ? { workspaces } : {}),
         legacy: { original, previous, current },
         recovery: Object.fromEntries(Object.entries(meta).filter(([key]) => key.startsWith('library-recovery:'))
           .map(([key, raw]) => [key.slice('library-recovery:'.length), raw])) });
     });
   } finally { db.close(); }
 }
+
+export const libraryBackup = () => backup(false);
+/** One raw snapshot includes wrapper relationships and upstream recovery data. */
+export const homeforgeBackup = () => backup(true);
 
 export function notifyLibraryChange(id: string) {
   // A tiny optional signal, never project data. Commit correctness does not depend

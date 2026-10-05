@@ -1,6 +1,6 @@
 # M1.2 proposal — Recovery and homeowner dashboard
 
-Status: draft for scope review, 2026-10-04. This document proposes the next work; it does not describe implemented features. M1.1 is committed as `a402da1` on `foundation-remediation`. Jesse authorized pushing the completed work and this separate draft to the HOMEFORGE fork.
+Status: accepted on 2026-10-04 by Jesse's “Lets do M1.2”; both steps are now implemented locally. See [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for verified results. The scope below preserves the original proposal. M1.1 is committed as `a402da1` on `foundation-remediation`; M1.2 changes have not been committed or pushed.
 
 ## Intended outcome
 
@@ -56,4 +56,4 @@ Acceptance tests: workspace/project creation and reload; opening the exact refer
 
 For each implementation step, use focused tests for the affected persistence or UI boundaries, then `npm run check` and `npm test`. Add targeted browser checks when UI integration begins; do not repeat the broad historical browser baseline without a concrete reason. Preserve MIT notices, history, M1.1 changes and unrelated work.
 
-No implementation of this proposal has started. Review the scope and recovery behavior before writing the detailed execution plan. Recommended next scope: **M1.2a only**, followed by dashboard integration as M1.2b.
+The accepted full milestone included M1.2a followed by M1.2b. Execution and verified completion are tracked in [M1_2_IMPLEMENTATION_PLAN.md](M1_2_IMPLEMENTATION_PLAN.md).
