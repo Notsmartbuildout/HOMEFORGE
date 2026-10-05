@@ -85,7 +85,7 @@ M3.1 inspection found the inherited property panel already exposes wall length/t
 
 This task and Task 3 are one release gate: do not present capture as durably backed up until v2 backup/restore passes. Original evidence remains in the same local browser storage while that gate is pending.
 
-M4 storage and backup v2 passed the earlier byte-exact browser restore gate. The October 5 coverage/identity checkpoint passed 44 affected unit tests, zero type-check diagnostics, a production build and three Chromium paths. The owner requested fewer repeated test runs; the final fresh full-suite and cross-engine gate remains open, so M4 is still in progress.
+M4 storage and backup v2 passed the earlier byte-exact browser restore gate. The coverage/identity checkpoint is `4f41a33`. Its final October 5 gate passed 1,282 unit tests in 134 files, zero type-check diagnostics, production build and nine relevant browser cases across Chromium/Firefox/WebKit. M4 is complete. The owner requested fewer repeated tests, so later milestones use focused checks during development and one broad milestone gate.
 
 ### Task 3: HOMEFORGE backup v2 and recovery
 
