@@ -40,11 +40,11 @@ for (const width of [1440, 700, 390]) {
     await expect(identity).toContainText('Existing Conditions');
     if (width < 768) {
       await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
-      expect(await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top)).toBe(144);
+      expect(await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top)).toBe(192);
       await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
     }
     if (testInfo.project.name === 'chromium' && width === 1440)
-      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_3_EDITOR.png' });
+      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_4_EDITOR.png' });
     expect(Object.keys(await savedProjects(page))).toEqual(Object.keys(before)); expect(errors).toEqual([]);
     expect((await savedProjects(page))[id].floors).toEqual(before[id].floors);
     await identity.getByRole('button', { name: 'Return to renovations' }).click();
@@ -138,7 +138,7 @@ test('options switch with saved edits, reset tools and survive editor and dashbo
   await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
   await page.reload(); await expect(page.getByRole('button', { name: 'Option edited', exact: true })).toBeVisible();
   await expect(page.getByLabel('Design variant', { exact: true })).toHaveValue(option.id);
-  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_3_OPTION.png' });
+  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_4_OPTION.png' });
   await page.getByRole('button', { name: 'Return to renovations' }).click();
   await page.reload(); await page.getByRole('link', { name: 'Continue Option A', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
@@ -185,6 +185,8 @@ test('editor return retains unsaved edits when persistence fails and recovers af
   await page.goto('/'); await createWorkspace(page); await createRenovation(page);
   await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
   await expect(page.getByRole('application')).toBeVisible();
+  await page.getByRole('button', { name: 'Begin correction', exact: true }).click();
+  await page.getByRole('button', { name: 'Start correction', exact: true }).click();
   await page.evaluate(() => {
     (window as any).homeforgeSaveFailure = true;
     const original = IDBObjectStore.prototype.put;
@@ -200,7 +202,7 @@ test('editor return retains unsaved edits when persistence fails and recovers af
   await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
   await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
   const drawerTop = await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top);
-  expect(drawerTop).toBe(144);
+  expect(drawerTop).toBe(192);
   await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
   await expect(page).toHaveURL(/\/editor/);
   await expect(page.getByRole('button', { name: 'Corrected entry', exact: true })).toBeVisible();
@@ -256,4 +258,49 @@ test('missing HOMEFORGE references show recovery and never create substitute pla
   await expect(page.getByRole('link', { name: 'Open Existing Conditions', exact: true })).toHaveCount(0);
   await page.goto(href!); await expect(page.getByRole('alert')).toContainText('Existing Conditions');
   expect(await storedRecords(page)).toEqual({}); await expect(page.getByRole('application')).toHaveCount(0);
+});
+
+
+test('baseline protection requires intentional correction, preserves edits on failure and returns on reload and standalone access', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Protected');
+  const before = await savedProjects(page), id = Object.keys(before)[0];
+  await page.getByRole('button', { name: 'Front entry', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Accidental');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  await expect(page.getByRole('alert').filter({ hasText: 'Existing Conditions is protected' })).toBeVisible();
+  expect(await savedProjects(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Begin correction', exact: true }).click();
+  await page.getByRole('button', { name: 'Start correction', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Correction mode');
+  await page.evaluate(() => {
+    (window as any).blockCorrection = true;
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === 'projects' && (window as any).blockCorrection) throw new DOMException('Full', 'QuotaExceededError');
+      return original.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: 'Front entry', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Corrected baseline');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  await page.getByRole('button', { name: 'Finish corrections', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Finish corrections', exact: true })).toBeVisible();
+  expect(await savedProjects(page)).toEqual(before);
+  await page.evaluate(() => { (window as any).blockCorrection = false; });
+  await page.getByRole('button', { name: 'Finish corrections', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Begin correction', exact: true })).toBeVisible();
+  expect((await savedProjects(page))[id].name).toBe('Corrected baseline');
+  await page.getByRole('button', { name: 'Begin correction', exact: true }).click();
+  await page.getByRole('button', { name: 'Start correction', exact: true }).click();
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Protected');
+  await page.goto(`/editor?id=${id}`);
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Protected');
+  await expect(page.getByRole('application')).toBeVisible();
+  expect((await savedProjects(page))[id].name).toBe('Corrected baseline');
+  expect(errors).toEqual([]);
 });

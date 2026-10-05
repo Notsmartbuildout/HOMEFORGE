@@ -12,6 +12,8 @@
   import { currentProject, viewMode, selectedElementId, selectedRoomId, createDefaultProject, loadProject, selectedTool, placingFurnitureId, elevationWallId, elevationPickMode } from '$lib/stores/project';
   import { localStore, storageErrorMessage, downloadLibraryBackup, downloadHomeforgeBackup } from '$lib/services/datastore';
   import { resolveHomeforgeEditorContext } from '$lib/services/homeforgeDashboard';
+  import { isProtectedBaseline } from '$lib/services/homeforgeReferences';
+  import { baselineProtection, protectionError, beginBaselineCorrection, endBaselineCorrection, baselineReadOnly } from '$lib/stores/baselineProtection';
   import { createHomeforgeStore } from '$lib/services/homeforge';
   import { refreshSnapshots } from '$lib/stores/versionHistory';
   import { autoSave, markClean, saveState, savingCopy } from '$lib/stores/saveStatus';
@@ -77,6 +79,26 @@
   const homeforgeClient = createHomeforgeStore();
   let selectedVariantId = $state(''), optionForm = $state(false), optionName = $state('Option A');
   let editorAlive = true;
+  let correctionForm = $state(false);
+  async function correctionMode() {
+    const project = get(currentProject);
+    const wasSaved = get(saveState) === 'saved';
+    if (!project || returning) return;
+    returning = true; navigationError = null;
+    try {
+      await localStore.assertCurrent(project.id);
+      if (get(baselineProtection).correcting) {
+        await saveBeforeTransition();
+        if (!editorAlive || get(currentProject) !== project) throw new Error('The editor changed while saving. Save the latest corrections before finishing.');
+        loadProject(project, true); markClean();
+      } else {
+        if (!await isProtectedBaseline(project.id)) throw new Error('Baseline metadata changed. Reload before editing.');
+        if (!editorAlive || get(currentProject) !== project) return;
+        beginBaselineCorrection(project.id); if (wasSaved) markClean(); correctionForm = false;
+      }
+    } catch (error) { navigationError = storageErrorMessage(error); }
+    finally { returning = false; }
+  }
 
   async function saveBeforeTransition() {
     if (get(savingCopy)) throw new Error('Wait for the recovery copy to finish before changing editor context.');
@@ -90,6 +112,7 @@
     const variant = context?.variants.find(v => v.id === variantId);
     if (!context || !variant) throw new Error('Design variant is missing. Return to HOMEFORGE for recovery.');
     const project = await localStore.load(variant.projectId);
+    const protectedBaseline = await isProtectedBaseline(variant.projectId);
     if (!editorAlive) return;
     if (get(currentProject) !== before || get(saveState) !== 'saved') throw new Error('The editor changed during loading. Save the latest edits before switching.');
     if (!project) throw new Error('Saved design variant is missing. Download a HOMEFORGE backup for recovery.');
@@ -100,13 +123,13 @@
     url.searchParams.set('id', project.id); url.searchParams.set('variant', variant.id);
     replaceState(url, page.state);
     homeforgeContext = { ...context, variant }; selectedVariantId = variant.id;
-    loadProject(project); markClean();
+    loadProject(project, protectedBaseline); markClean();
     showLayers = false; showUndoHistory = false; buildPanelOpen = false; printOpen = false; commandPaletteOpen = false;
     void refreshSnapshots();
   }
 
   async function switchVariant(variantId: string) {
-    if (returning || !homeforgeContext) return;
+    if (returning || !homeforgeContext || variantId === homeforgeContext.variant.id) return;
     returning = true; navigationError = null;
     try { await saveBeforeTransition(); await openVariant(variantId); }
     catch (error) { navigationError = storageErrorMessage(error); }
@@ -120,7 +143,9 @@
       await saveBeforeTransition();
       const context = homeforgeContext, project = get(currentProject);
       if (!project || project.id !== context.variant.projectId) throw new Error('Editor project changed. Reload before creating an option.');
-      const variant = await homeforgeClient.cloneVariant(context.workspaceId, context.renovationId, context.variant.id, optionName, project);
+      const source = baselineReadOnly(project.id) ? await localStore.load(project.id) : project;
+      if (!source) throw new Error('Saved source is missing. Return to HOMEFORGE for recovery.');
+      const variant = await homeforgeClient.cloneVariant(context.workspaceId, context.renovationId, context.variant.id, optionName, source);
       if (!editorAlive) return;
       homeforgeContext = { ...context, variants: [...context.variants, variant] }; optionForm = false;
       if (get(currentProject) !== project || get(saveState) !== 'saved') throw new Error('The option was created, but newer edits remain in this plan. Save them before switching.');
@@ -232,15 +257,20 @@
         homeforgeContext = context; selectedVariantId = context.variant.id;
       }
       if (id) {
+        const protectedBaseline = await isProtectedBaseline(id);
+        if (!editorAlive) return;
         // A new/imported project may exist only in memory if its first save failed.
         const pending = get(currentProject);
-        if (pending?.id === id && get(saveState) !== 'saved') { ready = true; return; }
+        if (pending?.id === id && get(saveState) !== 'saved') {
+          baselineProtection.set({ projectId: protectedBaseline ? id : null, correcting: false });
+          ready = true; return;
+        }
         const project = await localStore.load(id);
         if (!editorAlive) return;
         if (project) {
           if (homeforgeContext) await homeforgeClient.activateVariant(homeforgeContext.workspaceId, homeforgeContext.renovationId, homeforgeContext.variant.id, project);
           if (!editorAlive) return;
-          loadProject(project);
+          loadProject(project, protectedBaseline);
           markClean();
         } else {
           if (homeforge) throw new Error('Existing Conditions saved plan is missing. Return to HOMEFORGE for recovery.');
@@ -266,7 +296,7 @@
     // Imports can replace the active project from either sidebar or toolbar.
     // Keep reloads pointed at that project once initial route loading is complete.
     const stopSyncProjectUrl = currentProject.subscribe((project) => {
-      if (!ready || !project) return;
+      if (!ready || returning || !project) return;
       const url = new URL(window.location.href);
       if (url.searchParams.get('id') === project.id) return;
       url.searchParams.delete('import');
@@ -290,6 +320,7 @@
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       editorAlive = false;
+      endBaselineCorrection();
       stopSyncProjectUrl();
       window.removeEventListener('beforeunload', onBeforeUnload);
       document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -314,7 +345,7 @@
 <svelte:window on:keydown={onEditorKeydown} />
 
 {#if ready}
-  <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? '9rem' : '3rem'}>
+  <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? ($baselineProtection.projectId ? '12rem' : '9rem') : $baselineProtection.projectId ? '6rem' : '3rem'}>
     {#if homeforgeContext}
       <nav aria-label="HOMEFORGE editor context" class="h-24 md:h-12 shrink-0 flex flex-col md:flex-row justify-center md:items-center gap-2 px-3 bg-slate-100 border-b border-slate-200 text-sm">
         <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -330,6 +361,12 @@
           <button disabled={returning} class="text-blue-700 underline disabled:opacity-50" onclick={() => { optionName = `Option ${String.fromCharCode(65 + homeforgeContext!.variants.filter(v => v.kind === 'option').length)}`; optionForm = true; }}>Clone to option</button>
         </div>
       </nav>
+    {/if}
+    {#if $baselineProtection.projectId}
+      <div class="h-12 shrink-0 flex items-center justify-between gap-2 px-3 bg-amber-50 border-b border-amber-200 text-sm" role="region" aria-label="Baseline protection">
+        <span>{$baselineProtection.correcting ? 'Correction mode — Existing Conditions' : 'Protected — Existing Conditions'}</span>
+        <button disabled={returning} class="shrink-0 text-blue-700 underline disabled:opacity-50" onclick={() => { if ($baselineProtection.correcting) void correctionMode(); else correctionForm = true; }}>{$baselineProtection.correcting ? 'Finish corrections' : 'Begin correction'}</button>
+      </div>
     {/if}
     <div inert={returning} class="shrink-0"><TopBar onToggleLayers={() => showLayers = !showLayers} layersOpen={showLayers} onToggleHistory={toggleHistory} historyOpen={showUndoHistory} /></div>
     <!-- Keep canvas/viewer controls beneath toolbar menus and project dialogs. -->
@@ -370,8 +407,20 @@
     </div>
   </div>
 
+  {#if $protectionError}<p role="alert" class="fixed bottom-32 inset-x-4 z-[60] rounded-lg bg-amber-50 text-amber-900 px-3 py-2 text-sm shadow-lg">{$protectionError}</p>{/if}
   {#if navigationError}<p role="alert" class="fixed bottom-20 inset-x-4 z-[60] rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm shadow-lg">{navigationError}</p>{/if}
 
+  {#if correctionForm}
+    <dialog use:modalDialog aria-label="Correct Existing Conditions" oncancel={event => { if (returning) event.preventDefault(); else correctionForm = false; }} class="m-auto max-w-[calc(100vw-2rem)] w-96 rounded-xl bg-white p-5 shadow-xl backdrop:bg-black/50">
+      <h2 class="font-semibold">Correct Existing Conditions</h2>
+      <p class="mt-2 text-sm text-slate-600">Intentional corrections update this saved baseline and every renovation referencing it. Existing options keep their independent copies. Use Clone to option for proposed changes. Correction mode ends when you leave or reload.</p>
+      {#if navigationError}<p role="alert" class="mt-3 text-red-800">{navigationError}</p>{/if}
+      <div class="flex justify-end gap-4 mt-4">
+        <button disabled={returning} onclick={() => correctionForm = false}>Cancel</button>
+        <button disabled={returning} class="text-blue-700 underline" onclick={() => { void correctionMode(); }}>Start correction</button>
+      </div>
+    </dialog>
+  {/if}
   {#if optionForm}
     <dialog use:modalDialog aria-label="Create design option" oncancel={event => { if (returning) event.preventDefault(); else optionForm = false; }} class="m-auto max-w-[calc(100vw-2rem)] w-96 rounded-xl bg-white p-5 shadow-xl backdrop:bg-black/50">
       <form onsubmit={event => { event.preventDefault(); void createOption(); }}>

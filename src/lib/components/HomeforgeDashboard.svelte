@@ -170,7 +170,7 @@
           <p class="mt-3 text-sm font-medium">Existing Conditions</p>
           {#if projectStatus[variant.projectId] === 'ready'}
             <a href={`${base}/editor?id=${encodeURIComponent(variant.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}`} class="mt-2 inline-block text-sm font-semibold text-blue-600 underline">Open Existing Conditions</a>
-            <p class="mt-2 text-xs text-gray-500">This Existing plan is editable. Baseline locking is planned.</p>
+            <p class="mt-2 text-xs text-gray-500">Existing Conditions is protected. Use explicit correction mode for baseline edits.</p>
           {:else}
             <p role="alert" class="mt-2 text-sm text-amber-800">{projectStatus[variant.projectId] === 'missing' ? 'Saved plan is missing.' : 'Saved plan is unreadable.'} Download a HOMEFORGE backup for recovery.</p>
           {/if}

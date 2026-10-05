@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { createHomeWorkspace, createHomeforgeStore } from '$lib/services/homeforge';
+import { baselineProtection, endBaselineCorrection } from '$lib/stores/baselineProtection';
 import { createLocalStore } from '$lib/services/datastore';
 import { readSnapshotStorage, writeSnapshotStorage } from '$lib/utils/snapshotStorage';
 import { mockStorage, putRaw, rawRecords, failWrites } from './fixtures/indexeddb';
@@ -85,7 +86,9 @@ it('rejects stale workspace or source revisions without partial copies', async (
   expect(await rawRecords()).toEqual(before);
   await client.load(workspace.id);
   const upstream = createLocalStore(), changed = (await upstream.load(source.projectId))!;
-  changed.floors[0].walls[0].start.x += 10; await upstream.save(changed);
+  changed.floors[0].walls[0].start.x += 10;
+  baselineProtection.set({ projectId: changed.id, correcting: true });
+  await upstream.save(changed); endBaselineCorrection();
   const updated = await rawRecords();
   await expect(client.cloneVariant(workspace.id, renovation.id, source.id, 'Option A', project)).rejects.toThrow(/changed/);
   expect(await rawRecords()).toEqual(updated);

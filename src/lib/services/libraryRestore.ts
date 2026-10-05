@@ -131,7 +131,7 @@ export function prepareLibraryRestore(raw: string, sourceName = 'Library backup'
     if (active) return active;
     if (signal?.aborted) return Promise.reject(new DOMException('Restore cancelled.', 'AbortError'));
     if (!candidates.length && !workspaceCandidates.length && !archives.length) return Promise.reject(new Error('This backup contains no projects or recovery data.'));
-    active = withDatabase(db => transaction(db, homeforge ? ['projects', 'thumbnails', 'history', 'meta', 'homeforgeWorkspaces'] : ['projects', 'thumbnails', 'history', 'meta'], 'readwrite', async tx => {
+    active = withDatabase(db => transaction(db, ['projects', 'thumbnails', 'history', 'meta', 'homeforgeWorkspaces'], 'readwrite', async tx => {
       await migrateLegacy(tx, true);
       const saved: { id: string; name: string }[] = [];
       const projectIds = new Map<string, string>();

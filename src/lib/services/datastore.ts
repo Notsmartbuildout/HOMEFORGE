@@ -1,7 +1,9 @@
 import { readProject } from '$lib/utils/projectValidation';
 import type { Project } from '$lib/models/types';
 import { withDatabase, transaction, request, records, readRecord, libraryBackup, homeforgeBackup, notifyLibraryChange } from './localDatabase';
-import { assertProjectUnreferenced } from './homeforgeReferences';
+import { assertProjectUnreferenced, assertBaselineWritable } from './homeforgeReferences';
+import { get } from 'svelte/store';
+import { baselineProtection } from '$lib/stores/baselineProtection';
 export { PROJECTS_STORAGE_KEY, LIBRARY_CHANGE_KEY } from './localDatabase';
 
 export interface DataStore {
@@ -79,12 +81,14 @@ export function createLocalStore(): DataStore {
 
     async save(project) {
       const id = project.id, raw = JSON.stringify(project), generation = generations.get(id);
+      const correction = get(baselineProtection);
       await mutateLibrary(async () => {
-        await withDatabase(db => transaction(db, ['projects'], 'readwrite', async tx => {
+        await withDatabase(db => transaction(db, ['projects', 'homeforgeWorkspaces'], 'readwrite', async tx => {
           const projects = tx.objectStore('projects');
           const stored = (await request(projects.get(id))) ?? null;
           if (generation !== generations.get(id)) throw new ProjectConflictError();
           check(id, stored);
+          await assertBaselineWritable(tx, id, () => correction === get(baselineProtection) && correction.projectId === id && correction.correcting);
           projects.put(raw, id);
         }));
         // A successful request alone is not a committed transaction.

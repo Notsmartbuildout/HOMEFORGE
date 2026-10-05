@@ -1,8 +1,10 @@
+import { allowBaselineMutation, baselineReadOnly, baselineProtection } from './baselineProtection';
 import { writable, get } from 'svelte/store';
 import { currentProject, loadProject } from './project';
 import { readProject } from '$lib/utils/projectValidation';
 import type { Project } from '$lib/models/types';
-import { readRecord, updateRecord } from '$lib/services/localDatabase';
+import { readRecord, request, transaction, withDatabase } from '$lib/services/localDatabase';
+import { assertBaselineWritable } from '$lib/services/homeforgeReferences';
 import { storageErrorMessage } from '$lib/services/datastore';
 import { readSnapshotStorage, writeSnapshotStorage } from '$lib/utils/snapshotStorage';
 
@@ -49,13 +51,17 @@ let refreshRequest = 0;
 const writeErrors = new Map<string, string>();
 
 export async function saveSnapshot(project: Project, description: string) {
+  if (baselineReadOnly(project.id)) return false;
   // Freeze now: the editor may keep changing while storage is busy.
   const snapshot = { timestamp: Date.now(), description, data: JSON.stringify(project) };
+  const correction = get(baselineProtection);
   try {
-    await updateRecord('history', project.id, raw => {
-      const snapshots = parseSnapshots(raw);
-      return writeSnapshotStorage([...snapshots, snapshot].slice(-MAX_SNAPSHOTS));
-    });
+    await withDatabase(db => transaction(db, ['history', 'homeforgeWorkspaces'], 'readwrite', async tx => {
+      await assertBaselineWritable(tx, project.id, () => correction === get(baselineProtection) && correction.projectId === project.id && correction.correcting);
+      const history = tx.objectStore('history');
+      const snapshots = parseSnapshots((await request(history.get(project.id))) ?? null);
+      history.put(writeSnapshotStorage([...snapshots, snapshot].slice(-MAX_SNAPSHOTS)), project.id);
+    }));
     writeErrors.delete(project.id);
     if (get(currentProject)?.id === project.id) await refreshSnapshots();
     return true;
@@ -69,6 +75,7 @@ export async function saveSnapshot(project: Project, description: string) {
 
 export async function restoreSnapshot(projectId: string, index: number, expected?: Snapshot): Promise<boolean> {
   const before = get(currentProject);
+  if (!allowBaselineMutation(projectId)) return false;
   try {
     const snapshots = await getSnapshots(projectId);
     if (get(currentProject) !== before || before?.id !== projectId) return false;
@@ -78,6 +85,7 @@ export async function restoreSnapshot(projectId: string, index: number, expected
     }
     const project = readProject(JSON.parse(snapshots[index].data));
     if (project.id !== projectId) throw new Error('This version belongs to a different project.');
+    if (!allowBaselineMutation(projectId)) return false;
     loadProject(project);
     snapshotError.set(null);
     return true;
@@ -88,7 +96,11 @@ export async function restoreSnapshot(projectId: string, index: number, expected
 }
 
 export async function deleteAllSnapshots(projectId: string) {
-  await updateRecord('history', projectId, () => null);
+  const correction = get(baselineProtection);
+  await withDatabase(db => transaction(db, ['history', 'homeforgeWorkspaces'], 'readwrite', async tx => {
+    await assertBaselineWritable(tx, projectId, () => correction === get(baselineProtection) && correction.projectId === projectId && correction.correcting);
+    tx.objectStore('history').delete(projectId);
+  }));
   writeErrors.delete(projectId);
   if (get(currentProject)?.id === projectId) await refreshSnapshots();
 }

@@ -1,6 +1,6 @@
 # M1.2 — Recovery and homeowner dashboard
 
-Completed locally on 2026-10-04 in `C:\DEVELOPMENT\HOMEFORGE`, branch `foundation-remediation`. These changes are uncommitted and have not been pushed. M1.1 and the original M1.2 proposal remain the published checkpoints.
+Completed locally on 2026-10-04 in `C:\DEVELOPMENT\HOMEFORGE`, branch `foundation-remediation`. Committed and pushed to the fork as 39ca141060fc09674cfc6eb8ca89d7ae03ee3cb8. The implementation supersedes the original proposal.
 
 ## Implemented
 

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { activeFloor, currentProject, beginUndoGroup, endUndoGroup } from '$lib/stores/project';
+import { activeFloor, currentProject, getEditableProject, beginUndoGroup, endUndoGroup } from '$lib/stores/project';
 import { openingAlignmentPosition } from './openingAlignment';
 import { openingPlanBounds } from './openingPlanBounds';
 import { wallPointAt } from './canvasRenderer';
@@ -81,7 +81,7 @@ export function planAlignment(floor: Floor, ids: ReadonlySet<string>, op: Alignm
 }
 
 export function alignElements(ids: Set<string>, op: AlignmentOp, context?: CanvasRenderingContext2D) {
-  const p = get(currentProject), floor = get(activeFloor);
+  const p = getEditableProject(), floor = get(activeFloor);
   if (!p || !floor) return;
   // Measure at one pixel per world unit so alignment does not change with zoom.
   const measurementContext = context ?? (typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') ?? undefined : undefined);

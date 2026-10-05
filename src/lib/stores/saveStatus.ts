@@ -2,6 +2,7 @@ import { writable, get } from 'svelte/store';
 import { currentProject, loadProject } from './project';
 import { localStore, storageErrorMessage, ProjectConflictError, PROJECTS_STORAGE_KEY, LIBRARY_CHANGE_KEY } from '$lib/services/datastore';
 import { saveSnapshot } from '$lib/stores/versionHistory';
+import { baselineReadOnly } from './baselineProtection';
 import type { Project } from '$lib/models/types';
 
 export type SaveState = 'saved' | 'unsaved' | 'saving';
@@ -26,7 +27,7 @@ export function initAutoSave() {
   let projectId = get(currentProject)?.id;
   const unsubscribe = currentProject.subscribe((_p) => {
     if (first) { first = false; return; }
-    if (!_p) return;
+    if (!_p || baselineReadOnly(_p.id)) return;
     if (_p.id !== projectId) {
       projectId = _p.id;
       lastSavedAt.set(null);
@@ -120,6 +121,7 @@ async function persist(manual: boolean): Promise<boolean> {
   clearSaveTimer();
   const p = get(currentProject);
   if (!p) return false;
+  if (baselineReadOnly(p.id)) return get(saveState) === 'saved';
   if (lastProjectId !== p.id) {
     lastSavedAt.set(null);
     saveError.set(null);

@@ -1,4 +1,5 @@
 import { readProject } from '$lib/utils/projectValidation';
+import { assertProjectUnreferenced } from './homeforgeReferences';
 
 export const DATABASE_NAME = 'openplan3d-local';
 export const PROJECTS_STORAGE_KEY = 'floorplan_projects';
@@ -134,8 +135,12 @@ export async function migrateLegacy(tx: IDBTransaction, preserveUnreadable = fal
       const link: { id: string; raw: string } | undefined = await request(meta.get(`recovered:${id}`));
       // Continuing work in an old tab updates its untouched recovery copy.
       // Editing/deleting that copy in the new app makes the next recovery independent.
-      const reuse = link && await request(projects.get(link.id)) === link.raw;
-      if (reuse) copy.id = link.id;
+      let reuse = link && await request(projects.get(link.id)) === link.raw;
+      if (reuse) {
+        // An adopted recovery belongs to HOMEFORGE; old tabs get another copy.
+        try { await assertProjectUnreferenced(tx, link!.id); } catch { reuse = false; }
+      }
+      if (reuse) copy.id = link!.id;
       else {
         let attempts = 0;
         do {
@@ -157,7 +162,7 @@ export async function migrateLegacy(tx: IDBTransaction, preserveUnreadable = fal
 export async function withDatabase<T>(run: (db: IDBDatabase) => Promise<T>, options: { migrate?: boolean } = {}): Promise<T> {
   const db = await openDatabase();
   try {
-    if (options.migrate !== false) await transaction(db, [...STORES], 'readwrite', tx => migrateLegacy(tx));
+    if (options.migrate !== false) await transaction(db, [...STORES, HOMEFORGE_STORE], 'readwrite', tx => migrateLegacy(tx));
     return await run(db);
   }
   finally { db.close(); }
