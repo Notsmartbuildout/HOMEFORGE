@@ -2,7 +2,7 @@
 
 ## Request to ChatGPT
 
-Act as my product and architecture planning partner. Read M1_2_COMPLETE.md alongside this handoff: HOMEFORGE's foundation, domain layer, recovery and minimal homeowner dashboard are implemented. M1.2 is verified locally but uncommitted. Help me plan M2 independent option variants and baseline correction/enforcement, then produce a concrete implementation handoff for Codex. Ask only questions that materially change that plan.
+Act as my product and architecture planning partner. Read HANDOFF.md and the latest milestone document alongside this handoff: HOMEFORGE's foundation, domain layer, recovery, dashboard, editor context, complete option duplication and safe switching are implemented. Codex is continuing the authorized sequence through baseline enforcement/correction and resilience (M2.4/M2.5), with each verified milestone pushed to the fork. Help me plan subsequent homeowner UI work after those gates complete. Ask only questions that materially change that plan.
 
 ## Project and working arrangement
 
@@ -29,7 +29,7 @@ Success means I can reproduce measured conditions, create an independent propose
 
 The inherited editor already provides local project storage, manual floor-plan editing, numeric properties, walls/openings/furniture, undo/redo, 2D and 3D views, elevation tools, imports and exports, photo-related metadata and compatible RoomPlan file import. These inherited capabilities still need a homeowner workflow and practical evaluation.
 
-HOMEFORGE now has workspace/renovation/variant metadata referencing upstream project IDs, a minimal dashboard for Existing Conditions, portable backup/restore and reference-safe deletion. Option A/B creation/switching, editor baseline enforcement and dimension-level verification remain unimplemented. See M1_2_COMPLETE.md for exact behavior and current evidence.
+HOMEFORGE now has workspace/renovation/variant metadata referencing upstream project IDs, a dashboard for Existing Conditions and active options, portable backup/restore, reference-safe deletion, editor identity, complete option creation and safe save/load/reset switching. Editor baseline enforcement and final resilience remain the next authorized checkpoints; dimension-level verification remains outside this sequence. See M2_3_VARIANT_SWITCHER.md and HANDOFF.md for current behavior/evidence.
 
 ## Architecture decisions to preserve
 

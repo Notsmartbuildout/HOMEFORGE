@@ -6,6 +6,34 @@ import { mockStorage, putRaw, rawRecords, failWrites } from './fixtures/indexedd
 import { roomProject } from './fixtures/project';
 
 beforeEach(() => { mockStorage(); });
+
+it('activates only a valid saved target and persists the pointer without changing geometry', async () => {
+  const { client, workspace, renovation, source } = await fixture();
+  const option = await client.cloneVariant(workspace.id, renovation.id, source.id, 'Option A');
+  const before = await rawRecords();
+  expect((await client.activateVariant(workspace.id, renovation.id, option.id)).id).toBe(option.projectId);
+  const saved = (await createHomeforgeStore().load(workspace.id))!.renovationProjects[0];
+  expect(saved.activeVariantId).toBe(option.id); expect(saved.existingVariantId).toBe(source.id);
+  expect(await rawRecords()).toEqual(before);
+  await putRaw('projects', source.projectId, '{damaged');
+  const metadata = await rawRecords('homeforgeWorkspaces');
+  await expect(client.activateVariant(workspace.id, renovation.id, source.id)).rejects.toThrow();
+  expect(await rawRecords('homeforgeWorkspaces')).toEqual(metadata);
+});
+
+it('keeps the old active pointer on target conflicts and failed activation writes', async () => {
+  const { client, workspace, renovation, source } = await fixture();
+  const option = await client.cloneVariant(workspace.id, renovation.id, source.id, 'Option A');
+  const upstream = createLocalStore(), expected = (await upstream.load(option.projectId))!;
+  const changed = structuredClone(expected); changed.name = 'Changed elsewhere'; await upstream.save(changed);
+  const metadata = await rawRecords('homeforgeWorkspaces');
+  await expect(client.activateVariant(workspace.id, renovation.id, option.id, expected)).rejects.toThrow(/changed/);
+  expect(await rawRecords('homeforgeWorkspaces')).toEqual(metadata);
+  const restore = failWrites('homeforgeWorkspaces');
+  await expect(client.activateVariant(workspace.id, renovation.id, option.id)).rejects.toThrow();
+  restore(); expect(await rawRecords('homeforgeWorkspaces')).toEqual(metadata);
+  expect((await client.load(workspace.id))!.renovationProjects[0].activeVariantId).toBe(source.id);
+});
 async function fixture() {
   const client = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await client.save(workspace);
   const project = roomProject();

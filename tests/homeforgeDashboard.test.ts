@@ -16,6 +16,16 @@ it('resolves validated editor identity without changing wrapper or geometry', as
   expect(await client.load(workspace.id)).toEqual({ ...workspace, renovationProjects: [renovation], updatedAt: renovation.updatedAt });
 });
 
+it('resolves explicit option links and exposes variants while retaining legacy Existing links', async () => {
+  const client = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await client.save(workspace);
+  const renovation = await client.createRenovationProject(workspace.id, { name: 'Entry' });
+  const option = await client.cloneVariant(workspace.id, renovation.id, renovation.existingVariantId, 'Option A');
+  const context = await resolveHomeforgeEditorContext(workspace.id, renovation.id, option.id);
+  expect(context.variant.id).toBe(option.id); expect(context.variants).toHaveLength(2);
+  expect(await resolveExistingProjectId(workspace.id, renovation.id)).toBe(renovation.variants[0].projectId);
+  await expect(resolveHomeforgeEditorContext(workspace.id, renovation.id, 'missing')).rejects.toThrow();
+});
+
 it('keeps healthy workspaces visible alongside unreadable metadata and reports missing geometry', async () => {
   const client = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await client.save(workspace);
   const renovation = await client.createRenovationProject(workspace.id, { name: 'Entry' }), id = renovation.variants[0].projectId;

@@ -12,7 +12,9 @@
   import { currentProject, viewMode, selectedElementId, selectedRoomId, createDefaultProject, loadProject, selectedTool, placingFurnitureId, elevationWallId, elevationPickMode } from '$lib/stores/project';
   import { localStore, storageErrorMessage, downloadLibraryBackup, downloadHomeforgeBackup } from '$lib/services/datastore';
   import { resolveHomeforgeEditorContext } from '$lib/services/homeforgeDashboard';
-  import { autoSave, markClean, saveState } from '$lib/stores/saveStatus';
+  import { createHomeforgeStore } from '$lib/services/homeforge';
+  import { refreshSnapshots } from '$lib/stores/versionHistory';
+  import { autoSave, markClean, saveState, savingCopy } from '$lib/stores/saveStatus';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
   import TopBar from '$lib/components/toolbar/TopBar.svelte';
   import BuildPanel from '$lib/components/sidebar/BuildPanel.svelte';
@@ -72,13 +74,66 @@
   let loadError = $state<string | null>(null);
   let homeforgeContext = $state<Awaited<ReturnType<typeof resolveHomeforgeEditorContext>> | null>(null);
   let returning = $state(false), navigationError = $state<string | null>(null);
+  const homeforgeClient = createHomeforgeStore();
+  let selectedVariantId = $state(''), optionForm = $state(false), optionName = $state('Option A');
+  let editorAlive = true;
+
+  async function saveBeforeTransition() {
+    if (get(savingCopy)) throw new Error('Wait for the recovery copy to finish before changing editor context.');
+    if (get(saveState) !== 'saved' && (!await autoSave() || get(saveState) !== 'saved'))
+      throw new Error('Your latest edits could not be saved. Resolve the save error before returning to renovations or switching variants.');
+  }
+
+  async function openVariant(variantId: string) {
+    const context = homeforgeContext;
+    const before = get(currentProject);
+    const variant = context?.variants.find(v => v.id === variantId);
+    if (!context || !variant) throw new Error('Design variant is missing. Return to HOMEFORGE for recovery.');
+    const project = await localStore.load(variant.projectId);
+    if (!editorAlive) return;
+    if (get(currentProject) !== before || get(saveState) !== 'saved') throw new Error('The editor changed during loading. Save the latest edits before switching.');
+    if (!project) throw new Error('Saved design variant is missing. Download a HOMEFORGE backup for recovery.');
+    await homeforgeClient.activateVariant(context.workspaceId, context.renovationId, variant.id, project);
+    if (!editorAlive) return;
+    if (get(currentProject) !== before || get(saveState) !== 'saved') throw new Error('The editor changed during activation. Your current edits remain open; save before retrying.');
+    const url = new URL(window.location.href);
+    url.searchParams.set('id', project.id); url.searchParams.set('variant', variant.id);
+    replaceState(url, page.state);
+    homeforgeContext = { ...context, variant }; selectedVariantId = variant.id;
+    loadProject(project); markClean();
+    showLayers = false; showUndoHistory = false; buildPanelOpen = false; printOpen = false; commandPaletteOpen = false;
+    void refreshSnapshots();
+  }
+
+  async function switchVariant(variantId: string) {
+    if (returning || !homeforgeContext) return;
+    returning = true; navigationError = null;
+    try { await saveBeforeTransition(); await openVariant(variantId); }
+    catch (error) { navigationError = storageErrorMessage(error); }
+    finally { selectedVariantId = homeforgeContext?.variant.id ?? ''; returning = false; }
+  }
+
+  async function createOption() {
+    if (returning || !homeforgeContext) return;
+    returning = true; navigationError = null;
+    try {
+      await saveBeforeTransition();
+      const context = homeforgeContext, project = get(currentProject);
+      if (!project || project.id !== context.variant.projectId) throw new Error('Editor project changed. Reload before creating an option.');
+      const variant = await homeforgeClient.cloneVariant(context.workspaceId, context.renovationId, context.variant.id, optionName, project);
+      if (!editorAlive) return;
+      homeforgeContext = { ...context, variants: [...context.variants, variant] }; optionForm = false;
+      if (get(currentProject) !== project || get(saveState) !== 'saved') throw new Error('The option was created, but newer edits remain in this plan. Save them before switching.');
+      await openVariant(variant.id);
+    } catch (error) { navigationError = storageErrorMessage(error); }
+    finally { selectedVariantId = homeforgeContext?.variant.id ?? ''; returning = false; }
+  }
 
   async function returnToRenovations() {
     if (returning || !homeforgeContext) return;
     returning = true; navigationError = null;
     try {
-      if (get(saveState) !== 'saved' && (!await autoSave() || get(saveState) !== 'saved'))
-        throw new Error('Your latest edits could not be saved. Resolve the save error before returning to renovations.');
+      await saveBeforeTransition();
       await goto(`${base}/?workspace=${encodeURIComponent(homeforgeContext.workspaceId)}`);
     } catch (error) { navigationError = storageErrorMessage(error); }
     finally { returning = false; }
@@ -171,16 +226,20 @@
         const workspace = url.searchParams.get('workspace'), renovation = url.searchParams.get('renovation');
         if (!id || !workspace || !renovation)
           throw new Error('Existing Conditions reference is missing or does not match this editor link. Return to HOMEFORGE for recovery.');
-        const context = await resolveHomeforgeEditorContext(workspace, renovation);
+        await homeforgeClient.load(workspace);
+        const context = await resolveHomeforgeEditorContext(workspace, renovation, url.searchParams.get('variant') ?? undefined);
         if (context.variant.projectId !== id) throw new Error('Existing Conditions reference does not match this editor link. Return to HOMEFORGE for recovery.');
-        homeforgeContext = context;
+        homeforgeContext = context; selectedVariantId = context.variant.id;
       }
       if (id) {
         // A new/imported project may exist only in memory if its first save failed.
         const pending = get(currentProject);
         if (pending?.id === id && get(saveState) !== 'saved') { ready = true; return; }
         const project = await localStore.load(id);
+        if (!editorAlive) return;
         if (project) {
+          if (homeforgeContext) await homeforgeClient.activateVariant(homeforgeContext.workspaceId, homeforgeContext.renovationId, homeforgeContext.variant.id, project);
+          if (!editorAlive) return;
           loadProject(project);
           markClean();
         } else {
@@ -212,7 +271,7 @@
       if (url.searchParams.get('id') === project.id) return;
       url.searchParams.delete('import');
       // Imports change the active upstream project; discard the old wrapper link.
-      url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation');
+      url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation'); url.searchParams.delete('variant');
       homeforgeContext = null;
       url.searchParams.set('id', project.id);
       replaceState(url, page.state);
@@ -230,12 +289,14 @@
     window.addEventListener('beforeunload', onBeforeUnload);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
+      editorAlive = false;
       stopSyncProjectUrl();
       window.removeEventListener('beforeunload', onBeforeUnload);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   });
   function onEditorKeydown(e: KeyboardEvent) {
+    if (returning) { e.preventDefault(); e.stopImmediatePropagation(); return; }
     if (hasOpenModal()) return;
     const target = e.target as HTMLElement | null;
     const typing = !!target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable);
@@ -253,18 +314,26 @@
 <svelte:window on:keydown={onEditorKeydown} />
 
 {#if ready}
-  <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? '6rem' : '3rem'}>
+  <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? '9rem' : '3rem'}>
     {#if homeforgeContext}
-      <nav aria-label="HOMEFORGE editor context" class="h-12 shrink-0 flex items-center gap-3 px-3 bg-slate-100 border-b border-slate-200 text-sm">
+      <nav aria-label="HOMEFORGE editor context" class="h-24 md:h-12 shrink-0 flex flex-col md:flex-row justify-center md:items-center gap-2 px-3 bg-slate-100 border-b border-slate-200 text-sm">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
         <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={returnToRenovations}>Return to renovations</button>
         <span class="min-w-0 truncate" title={`${homeforgeContext.workspaceName} / ${homeforgeContext.renovationName} / ${homeforgeContext.variant.name}`}>
           {homeforgeContext.workspaceName} / <strong>{homeforgeContext.renovationName}</strong> / {homeforgeContext.variant.name}
         </span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <select aria-label="Design variant" bind:value={selectedVariantId} disabled={returning} onchange={event => { void switchVariant(event.currentTarget.value); }} class="min-w-0 max-w-44 rounded border border-slate-300 p-1">
+            {#each homeforgeContext.variants as variant}<option value={variant.id}>{variant.name}</option>{/each}
+          </select>
+          <button disabled={returning} class="text-blue-700 underline disabled:opacity-50" onclick={() => { optionName = `Option ${String.fromCharCode(65 + homeforgeContext!.variants.filter(v => v.kind === 'option').length)}`; optionForm = true; }}>Clone to option</button>
+        </div>
       </nav>
     {/if}
-    <TopBar onToggleLayers={() => showLayers = !showLayers} layersOpen={showLayers} onToggleHistory={toggleHistory} historyOpen={showUndoHistory} />
+    <div inert={returning} class="shrink-0"><TopBar onToggleLayers={() => showLayers = !showLayers} layersOpen={showLayers} onToggleHistory={toggleHistory} historyOpen={showUndoHistory} /></div>
     <!-- Keep canvas/viewer controls beneath toolbar menus and project dialogs. -->
-    <div class="flex flex-1 overflow-hidden isolate">
+    <div inert={returning} class="flex flex-1 overflow-hidden isolate">
       {#if mode === '2d'}
         <!-- Build panel: inline sidebar on md+, off-canvas drawer on phones -->
         {#if buildPanelOpen}
@@ -302,6 +371,22 @@
   </div>
 
   {#if navigationError}<p role="alert" class="fixed bottom-20 inset-x-4 z-[60] rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm shadow-lg">{navigationError}</p>{/if}
+
+  {#if optionForm}
+    <dialog use:modalDialog aria-label="Create design option" oncancel={event => { if (returning) event.preventDefault(); else optionForm = false; }} class="m-auto max-w-[calc(100vw-2rem)] w-96 rounded-xl bg-white p-5 shadow-xl backdrop:bg-black/50">
+      <form onsubmit={event => { event.preventDefault(); void createOption(); }}>
+        <h2 class="font-semibold">Create design option</h2>
+        <p class="mt-2 text-sm text-slate-600">Copy this variant's complete saved plan and assets into an independent option.</p>
+        <label for="homeforge-option-name" class="block mt-4 text-sm font-medium">Option name</label>
+        <input id="homeforge-option-name" bind:value={optionName} disabled={returning} required class="mt-1 w-full rounded border border-slate-300 p-2" />
+        {#if navigationError}<p role="alert" class="mt-3 text-red-800 text-sm">{navigationError}</p>{/if}
+        <div class="mt-4 flex justify-end gap-3">
+          <button type="button" disabled={returning} onclick={() => optionForm = false}>Cancel</button>
+          <button disabled={returning || !optionName.trim()} class="rounded bg-blue-600 text-white px-3 py-2 disabled:opacity-50">Create option</button>
+        </div>
+      </form>
+    </dialog>
+  {/if}
 
   <!-- Tools drawer FAB (mobile only) -->
   {#if mode === '2d'}

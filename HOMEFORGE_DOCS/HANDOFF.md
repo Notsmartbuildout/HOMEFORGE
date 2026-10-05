@@ -4,9 +4,9 @@ Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repositor
 
 ## Current state
 
-The authorized Windows setup and known-error remediation are complete. M1.1 and M1.2 are committed and pushed to the fork; M1.2 checkpoint is `39ca141`. M1.3 adds editor identity and safe return navigation, with verified results in [M1_3_EDITOR_CONTEXT.md](M1_3_EDITOR_CONTEXT.md). Jesse's continuing milestone objective authorizes implementation and commit/push checkpoints through M2.5. Baseline enforcement and options remain pending; hosted deployment remains out of scope.
+The authorized Windows setup and known-error remediation are complete. M1.1 through M2.2 are committed and pushed to the fork: M1.2 `39ca141`, M1.3 `8ca4d62`, M2.1 `b15ae2c`, M2.2 `caf2ef4`. M2.3 now integrates option creation, safe switching and durable active context; see [M2_3_VARIANT_SWITCHER.md](M2_3_VARIANT_SWITCHER.md). Jesse's continuing milestone objective authorizes implementation and commit/push checkpoints through M2.5. Baseline enforcement and the final resilience audit remain pending; hosted deployment remains out of scope.
 
-Read [M1_3_EDITOR_CONTEXT.md](M1_3_EDITOR_CONTEXT.md) and [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for APIs/recovery behavior, and [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the domain/schema migration. Current verification: all 1,228 unit tests in 129 files, 33 targeted HOMEFORGE browser cases across three engines, production build and type checking with zero errors/warnings pass. M0 evidence below remains historical.
+Read the current [M2_3_VARIANT_SWITCHER.md](M2_3_VARIANT_SWITCHER.md), [M2_2_CLONE_TO_OPTION.md](M2_2_CLONE_TO_OPTION.md) and [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for APIs/recovery behavior, and [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the domain/schema migration. Verification logs for each milestone are retained in EVIDENCE; M0 evidence below remains historical.
 
 - Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
 - `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
@@ -41,6 +41,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-M1.3 is published as `8ca4d62`, M2.1 as `b15ae2c`. M2.2's complete option duplication service is verified with 1,236 unit tests and zero type errors/warnings; see [M2_2_CLONE_TO_OPTION.md](M2_2_CLONE_TO_OPTION.md). Continue with M2.3 creation/switching UI; the milestones below remain the authorized sequence.
+Continue with M2.4 protected Existing Conditions and explicit correction mode, then M2.5 option removal and resilience tests. Existing remains editable until M2.4; do not imply protection is already enforced.
 
 Continue the authorized sequence in [M2_IMPLEMENTATION_PLAN.md](M2_IMPLEMENTATION_PLAN.md), committing and pushing each verified milestone to the owner's fork. Independent options, baseline correction/enforcement and resilience are the remaining authorized milestones. Measurement/AI/native-scanner work and hosted deployment remain outside this objective.

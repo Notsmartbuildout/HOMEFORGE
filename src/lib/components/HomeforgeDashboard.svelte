@@ -163,15 +163,21 @@
     <div class="mt-5 grid gap-4 sm:grid-cols-2">
       {#each selected.renovationProjects as renovation (renovation.id)}
         {@const variant = renovation.variants.find(v => v.id === renovation.existingVariantId)!}
+        {@const activeVariant = renovation.variants.find(v => v.id === renovation.activeVariantId)!}
         <article aria-label={renovation.name} class="min-w-0 rounded-lg border border-gray-200 p-4">
           <h3 class="break-words font-semibold">{renovation.name}</h3>
           {#if renovation.description}<p class="mt-1 break-words text-sm text-gray-500">{renovation.description}</p>{/if}
           <p class="mt-3 text-sm font-medium">Existing Conditions</p>
           {#if projectStatus[variant.projectId] === 'ready'}
             <a href={`${base}/editor?id=${encodeURIComponent(variant.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}`} class="mt-2 inline-block text-sm font-semibold text-blue-600 underline">Open Existing Conditions</a>
-            <p class="mt-2 text-xs text-gray-500">This plan is editable. Baseline locking and design options are planned.</p>
+            <p class="mt-2 text-xs text-gray-500">This Existing plan is editable. Baseline locking is planned.</p>
           {:else}
             <p role="alert" class="mt-2 text-sm text-amber-800">{projectStatus[variant.projectId] === 'missing' ? 'Saved plan is missing.' : 'Saved plan is unreadable.'} Download a HOMEFORGE backup for recovery.</p>
+          {/if}
+          {#if activeVariant.id !== variant.id}
+            {#if projectStatus[activeVariant.projectId] === 'ready'}
+              <a href={`${base}/editor?id=${encodeURIComponent(activeVariant.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}&variant=${encodeURIComponent(activeVariant.id)}`} class="mt-3 inline-block text-sm font-semibold text-blue-600 underline">Continue {activeVariant.name}</a>
+            {:else}<p role="alert" class="mt-2 text-sm text-amber-800">Active option is unavailable. Download a HOMEFORGE backup for recovery.</p>{/if}
           {/if}
         </article>
       {:else}<p class="text-sm text-gray-500">No renovations yet. Start with one space, such as the front entry.</p>{/each}

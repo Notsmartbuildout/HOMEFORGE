@@ -20,7 +20,7 @@ test.beforeEach(async ({ context }, testInfo) => {
   if (!testInfo.title.startsWith('first visit')) await context.addInitScript(() => { localStorage.setItem('hasSeenWelcome', 'true'); });
 });
 
-for (const width of [1440, 390]) {
+for (const width of [1440, 700, 390]) {
   test(`workspace and Existing Conditions persist and open the exact editor project at ${width}px`, async ({ page }, testInfo) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.setViewportSize({ width, height: 900 }); await page.goto('/');
@@ -38,8 +38,13 @@ for (const width of [1440, 390]) {
     await expect(identity).toContainText('My home');
     await expect(identity).toContainText('Front entry');
     await expect(identity).toContainText('Existing Conditions');
+    if (width < 768) {
+      await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
+      expect(await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top)).toBe(144);
+      await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
+    }
     if (testInfo.project.name === 'chromium' && width === 1440)
-      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M1_3_EDITOR.png' });
+      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_3_EDITOR.png' });
     expect(Object.keys(await savedProjects(page))).toEqual(Object.keys(before)); expect(errors).toEqual([]);
     expect((await savedProjects(page))[id].floors).toEqual(before[id].floors);
     await identity.getByRole('button', { name: 'Return to renovations' }).click();
@@ -109,6 +114,72 @@ test('background refresh does not move the renovation opening link during a clic
   expect(bounds.after).toBe(bounds.before);
 });
 
+test('options switch with saved edits, reset tools and survive editor and dashboard reload', async ({ page }, testInfo) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await page.getByRole('button', { name: /^Draw Wall/ }).click();
+  await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Create design option' });
+  await dialog.getByLabel('Option name', { exact: true }).fill('Option A');
+  await dialog.getByRole('button', { name: 'Create option', exact: true }).click();
+  await expect(page.getByLabel('Design variant', { exact: true })).toContainText('Option A');
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const renovation = workspace.renovationProjects[0], option = renovation.variants.find((v: any) => v.kind === 'option');
+  await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
+  await expect(page.getByRole('button', { name: /^Select V/ })).toHaveClass(/bg-blue-50/);
+  await expect(page.getByRole('button', { name: /^Draw Wall/ })).not.toHaveClass(/bg-blue-50/);
+  await page.getByRole('button', { name: 'Option A', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Option edited');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  await page.getByLabel('Design variant', { exact: true }).selectOption(renovation.existingVariantId);
+  await expect(page).toHaveURL(new RegExp(`id=${renovation.variants[0].projectId}`));
+  expect((await savedProjects(page))[option.projectId].name).toBe('Option edited');
+  await page.getByLabel('Design variant', { exact: true }).selectOption(option.id);
+  await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
+  await page.reload(); await expect(page.getByRole('button', { name: 'Option edited', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Design variant', { exact: true })).toHaveValue(option.id);
+  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_3_OPTION.png' });
+  await page.getByRole('button', { name: 'Return to renovations' }).click();
+  await page.reload(); await page.getByRole('link', { name: 'Continue Option A', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
+  await expect(page.getByRole('application')).toBeVisible();
+  await page.getByRole('button', { name: 'Return to renovations' }).click();
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await expect(page.getByRole('application')).toBeVisible();
+  expect(JSON.parse((await storedRecords(page, 'homeforgeWorkspaces'))[workspace.id]).renovationProjects[0].activeVariantId).toBe(renovation.existingVariantId);
+});
+
+test('failed option save blocks switching and preserves the active pointer until retry', async ({ page }) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Create design option' }).getByRole('button', { name: 'Create option', exact: true }).click();
+  await expect(page.getByLabel('Design variant', { exact: true })).toContainText('Option A');
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]), renovation = workspace.renovationProjects[0];
+  const option = renovation.variants.find((v: any) => v.kind === 'option');
+  await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
+  await page.evaluate(() => {
+    (window as any).blockOptionSave = true;
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === 'projects' && (window as any).blockOptionSave) throw new DOMException('Full', 'QuotaExceededError');
+      return original.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: 'Option A', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Pending option');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  await page.getByLabel('Design variant', { exact: true }).selectOption(renovation.existingVariantId);
+  await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
+  await expect(page.getByLabel('Design variant', { exact: true })).toHaveValue(option.id);
+  await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
+  expect(JSON.parse((await storedRecords(page, 'homeforgeWorkspaces'))[workspace.id]).renovationProjects[0].activeVariantId).toBe(option.id);
+  await page.evaluate(() => { (window as any).blockOptionSave = false; });
+  await page.getByLabel('Design variant', { exact: true }).selectOption(renovation.existingVariantId);
+  await expect(page).toHaveURL(new RegExp(`id=${renovation.variants[0].projectId}`));
+  expect((await savedProjects(page))[option.projectId].name).toBe('Pending option');
+});
+
 test('editor return retains unsaved edits when persistence fails and recovers after retry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto('/'); await createWorkspace(page); await createRenovation(page);
@@ -129,7 +200,7 @@ test('editor return retains unsaved edits when persistence fails and recovers af
   await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
   await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
   const drawerTop = await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top);
-  expect(drawerTop).toBe(96);
+  expect(drawerTop).toBe(144);
   await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
   await expect(page).toHaveURL(/\/editor/);
   await expect(page.getByRole('button', { name: 'Corrected entry', exact: true })).toBeVisible();

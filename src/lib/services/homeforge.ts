@@ -83,6 +83,26 @@ export function createHomeforgeStore() {
       revisions.set(id, null);
       notifyLibraryChange(id);
     },
+    async activateVariant(workspaceId: string, renovationId: string, variantId: string, expectedProject?: Project): Promise<Project> {
+      const expected = expectedProject === undefined ? undefined : JSON.stringify(readProject(expectedProject));
+      const result = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, 'projects'], 'readwrite', async tx => {
+        const metadata = tx.objectStore(HOMEFORGE_STORE), stored = (await request(metadata.get(workspaceId))) ?? null;
+        check(workspaceId, stored);
+        if (stored === null) throw new Error('HOMEFORGE workspace is missing.');
+        const workspace = decode(stored, workspaceId), renovation = workspace.renovationProjects.find(r => r.id === renovationId);
+        const variant = renovation?.variants.find(v => v.id === variantId);
+        if (!renovation || !variant) throw new Error('Design variant is missing. Reload before switching.');
+        const project = referencedProject(await request(tx.objectStore('projects').get(variant.projectId)), variant.projectId);
+        if (expected !== undefined && JSON.stringify(project) !== expected) throw new Error('Target project changed. Reload before switching.');
+        renovation.activeVariantId = variant.id;
+        renovation.updatedAt = workspace.updatedAt = new Date(Math.max(Date.now(), workspace.updatedAt.getTime(), renovation.updatedAt.getTime()));
+        const raw = JSON.stringify(readHomeWorkspace(workspace));
+        await request(metadata.put(raw, workspaceId));
+        return { project, raw };
+      }));
+      revisions.set(workspaceId, result.raw); notifyLibraryChange(workspaceId);
+      return result.project;
+    },
     /** Copy complete saved state; one commit owns geometry, history and relationships. */
     async cloneVariant(workspaceId: string, renovationId: string, sourceVariantId: string, name: string, expectedProject?: Project): Promise<DesignVariant> {
       if (typeof name !== 'string' || !name.trim()) throw new Error('Option name must be nonempty text.');
