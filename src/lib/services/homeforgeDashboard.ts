@@ -13,11 +13,11 @@ function workspaceRecord(raw: string, id: string): HomeWorkspace {
 /** Read-only projection: damaged entries never hide healthy workspaces. */
 export function readHomeforgeDashboard() {
   return withDatabase(db => transaction(db, ['projects', 'homeforgeWorkspaces'], 'readonly', async tx => {
-    const workspaces: HomeWorkspace[] = [], errors: { id: string; message: string }[] = [];
+    const workspaces: HomeWorkspace[] = [], errors: { id: string; message: string; raw: string }[] = [];
     const projectStatus: Record<string, 'ready' | 'missing' | 'unreadable'> = Object.create(null);
     for (const [id, raw] of Object.entries(await records(tx, 'homeforgeWorkspaces'))) {
       try { workspaces.push(workspaceRecord(raw, id)); }
-      catch { errors.push({ id, message: 'Unreadable workspace metadata. Download a HOMEFORGE backup for recovery.' }); }
+      catch { errors.push({ id, raw, message: 'Unreadable workspace metadata. Download a HOMEFORGE backup for recovery.' }); }
     }
     for (const workspace of workspaces) for (const renovation of workspace.renovationProjects) for (const variant of renovation.variants) {
       if (Object.hasOwn(projectStatus, variant.projectId)) continue;

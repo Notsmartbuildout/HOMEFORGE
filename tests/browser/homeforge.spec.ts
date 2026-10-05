@@ -44,7 +44,7 @@ for (const width of [1440, 700, 390]) {
       await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
     }
     if (testInfo.project.name === 'chromium' && width === 1440)
-      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_4_EDITOR.png' });
+      await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_5_EDITOR.png' });
     expect(Object.keys(await savedProjects(page))).toEqual(Object.keys(before)); expect(errors).toEqual([]);
     expect((await savedProjects(page))[id].floors).toEqual(before[id].floors);
     await identity.getByRole('button', { name: 'Return to renovations' }).click();
@@ -138,7 +138,7 @@ test('options switch with saved edits, reset tools and survive editor and dashbo
   await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
   await page.reload(); await expect(page.getByRole('button', { name: 'Option edited', exact: true })).toBeVisible();
   await expect(page.getByLabel('Design variant', { exact: true })).toHaveValue(option.id);
-  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_4_OPTION.png' });
+  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_5_OPTION.png' });
   await page.getByRole('button', { name: 'Return to renovations' }).click();
   await page.reload(); await page.getByRole('link', { name: 'Continue Option A', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`id=${option.projectId}`));
@@ -303,4 +303,137 @@ test('baseline protection requires intentional correction, preserves edits on fa
   await expect(page.getByRole('application')).toBeVisible();
   expect((await savedProjects(page))[id].name).toBe('Corrected baseline');
   expect(errors).toEqual([]);
+});
+
+
+for (const width of [1440, 390]) {
+  test(`option removal protects provenance, retries failures and retains projects at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+    await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+    for (const name of ['Option A', 'Option B']) {
+      await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+      const dialog = page.getByRole('dialog', { name: 'Create design option' });
+      await dialog.getByLabel('Option name', { exact: true }).fill(name);
+      await dialog.getByRole('button', { name: 'Create option', exact: true }).click();
+      await expect(dialog).not.toBeVisible();
+      await expect(page.getByLabel('Design variant', { exact: true })).toContainText(name);
+    }
+    await page.getByRole('button', { name: 'Return to renovations' }).click();
+    const before = await storedRecords(page);
+    await page.getByRole('button', { name: 'Remove Option A', exact: true }).click();
+    const removal = page.getByRole('dialog', { name: 'Remove design option' });
+    await removal.getByRole('button', { name: 'Remove option', exact: true }).click();
+    await expect(removal.getByRole('alert')).toContainText('descendant options first');
+    await removal.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.getByRole('button', { name: 'Remove Option B', exact: true }).click();
+    await page.evaluate(() => {
+      (window as any).blockRemoval = true;
+      const original = IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put = function (...args) {
+        if (this.name === 'homeforgeWorkspaces' && (window as any).blockRemoval) throw new DOMException('Full', 'QuotaExceededError');
+        return original.apply(this, args);
+      };
+    });
+    await removal.getByRole('button', { name: 'Remove option', exact: true }).click();
+    await expect(removal.getByRole('alert')).toContainText('Browser storage is full');
+    const failed: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+    expect(failed.renovationProjects[0].variants).toHaveLength(3);
+    await page.evaluate(() => { (window as any).blockRemoval = false; });
+    await removal.getByRole('button', { name: 'Remove option', exact: true }).click();
+    await expect(removal).not.toBeVisible();
+    await page.getByRole('button', { name: 'Remove Option A', exact: true }).click();
+    await removal.getByRole('button', { name: 'Remove option', exact: true }).click();
+    await expect(removal).not.toBeVisible(); await page.reload();
+    await expect(page.getByRole('article', { name: 'Front entry', exact: true })).toBeVisible();
+    const saved: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+    expect(saved.renovationProjects[0].variants).toHaveLength(1);
+    expect(saved.renovationProjects[0].activeVariantId).toBe(saved.renovationProjects[0].existingVariantId);
+    expect(await storedRecords(page)).toEqual(before);
+    await expect(page.getByRole('list', { name: 'Design options' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Option A', exact: true })).toBeVisible();
+  });
+}
+
+test('damaged metadata archives exact bytes atomically, retries and exports recovery without hiding healthy projects', async ({ page }, testInfo) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  const before = await storedRecords(page), damaged = '{exact damaged wrapper bytes';
+  await page.evaluate(raw => new Promise<void>((resolve, reject) => {
+    const req = indexedDB.open('openplan3d-local'); req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('homeforgeWorkspaces', 'readwrite');
+      tx.objectStore('homeforgeWorkspaces').put(raw, 'damaged');
+      tx.oncomplete = () => { db.close(); resolve(); }; tx.onabort = () => { db.close(); reject(tx.error); };
+    };
+  }), damaged);
+  await page.getByRole('button', { name: 'Refresh workspaces', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Unreadable workspace metadata' })).toBeVisible();
+  await page.getByRole('button', { name: 'Archive unreadable metadata', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Archive unreadable metadata' });
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  expect((await storedRecords(page, 'homeforgeWorkspaces')).damaged).toBe(damaged);
+  await page.getByRole('button', { name: 'Archive unreadable metadata', exact: true }).click();
+  await page.evaluate(() => {
+    (window as any).blockArchive = true;
+    const original = IDBObjectStore.prototype.add;
+    IDBObjectStore.prototype.add = function (...args) {
+      if (this.name === 'meta' && (window as any).blockArchive) throw new DOMException('Full', 'QuotaExceededError');
+      return original.apply(this, args);
+    };
+  });
+  await dialog.getByRole('button', { name: 'Archive metadata', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Browser storage is full');
+  expect((await storedRecords(page, 'homeforgeWorkspaces')).damaged).toBe(damaged);
+  expect(Object.keys(await storedRecords(page, 'meta')).filter(k => k.startsWith('library-recovery:'))).toHaveLength(0);
+  await page.evaluate(() => { (window as any).blockArchive = false; });
+  await dialog.getByRole('button', { name: 'Archive metadata', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Archive unreadable metadata', exact: true })).toHaveCount(0);
+  expect(await storedRecords(page)).toEqual(before);
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download HOMEFORGE backup', exact: true }).click();
+  const download = await pending, backup = JSON.parse(await readFile((await download.path())!, 'utf8'));
+  const recovery: any = JSON.parse(Object.values(backup.recovery)[0] as string);
+  expect(recovery.metadata.homeforgeWorkspaces.damaged).toBe(damaged);
+  if (testInfo.project.name === 'chromium') await page.screenshot({ path: 'HOMEFORGE_DOCS/EVIDENCE/M2_5_DASHBOARD.png' });
+  await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await expect(page.getByRole('application')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Protected');
+});
+
+
+
+test('baseline adoption in another tab blocks unsaved navigation and preserves exportable edits', async ({ page, context }) => {
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  // Canonical door orientation prevents legacy default revival from changing the fixture shape.
+  for (const floor of source.floors) for (const door of floor.doors) door.flipSide ??= false;
+  await context.addInitScript(source => { if (!localStorage.getItem('floorplan_projects')) localStorage.setItem('floorplan_projects', JSON.stringify({ [source.id]: JSON.stringify(source) })); }, source);
+  await page.goto('/'); await createWorkspace(page);
+  await page.getByRole('link', { name: source.name, exact: true }).click();
+  await expect(page.getByRole('application')).toBeVisible();
+  await page.evaluate(() => {
+    (window as any).blockPendingSave = true;
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === 'projects' && (window as any).blockPendingSave) throw new DOMException('Full', 'QuotaExceededError');
+      return original.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: source.name, exact: true }).click();
+  await page.getByRole('textbox', { name: 'Project name' }).fill('Pending correction');
+  await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+  const other = await context.newPage(); await other.goto('/');
+  await createRenovation(other, 'Adopted entry', source.id);
+  await page.evaluate(() => { (window as any).blockPendingSave = false; });
+  await page.getByRole('link', { name: 'Projects', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Existing Conditions is protected' })).toBeVisible();
+  await expect(page).toHaveURL(/\/editor/);
+  await expect(page.getByRole('button', { name: 'Pending correction', exact: true })).toBeVisible();
+  expect((await savedProjects(page))[source.id].name).toBe(source.name);
+  const pending = page.waitForEvent('download');
+  await page.getByRole('alert').filter({ hasText: 'Existing Conditions is protected' }).getByRole('button', { name: 'Download JSON backup', exact: true }).click();
+  const download = await pending, exported = JSON.parse(await readFile((await download.path())!, 'utf8'));
+  expect(exported.name).toBe('Pending correction');
+  expect(exported.floors).toEqual((await savedProjects(page))[source.id].floors);
+  await other.close();
 });

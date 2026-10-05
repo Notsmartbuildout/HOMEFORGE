@@ -1,0 +1,16 @@
+
+> open3dfloorplan@0.9.0 test
+> vitest run
+
+
+ RUN  v5.0.0 C:/DEVELOPMENT/HOMEFORGE
+
+
+ Test Files  132 passed (132)
+      Tests  1260 passed (1260)
+   Start at  22:09:11
+   Duration  11.52s (setup 42%, transform 23%, tests 19%, import 15%, worker 1%)
+
+    Isolate  132 workers spawned · ~307ms startup each (spawn + environment, per file)
+             at least ~3.37s faster with isolate: false — reuses workers across files instead of one per file
+

@@ -83,6 +83,44 @@ export function createHomeforgeStore() {
       revisions.set(id, null);
       notifyLibraryChange(id);
     },
+    /** Remove relationships only; upstream geometry and recovery assets remain saved. */
+    async removeVariant(workspaceId: string, renovationId: string, variantId: string): Promise<void> {
+      const raw = await withDatabase(db => transaction(db, [HOMEFORGE_STORE], 'readwrite', async tx => {
+        const metadata = tx.objectStore(HOMEFORGE_STORE), stored = (await request(metadata.get(workspaceId))) ?? null;
+        check(workspaceId, stored);
+        if (stored === null) throw new Error('HOMEFORGE workspace is missing.');
+        const workspace = decode(stored, workspaceId), renovation = workspace.renovationProjects.find(r => r.id === renovationId);
+        const variant = renovation?.variants.find(v => v.id === variantId);
+        if (!renovation || !variant) throw new Error('Design variant is missing. Reload before removing.');
+        if (variant.kind === 'existing') throw new Error('Existing Conditions cannot be removed.');
+        if (renovation.variants.some(v => v.createdFromVariantId === variant.id)) throw new Error('Remove descendant options first before removing their source option.');
+        renovation.variants = renovation.variants.filter(v => v.id !== variant.id);
+        if (renovation.activeVariantId === variant.id) renovation.activeVariantId = renovation.existingVariantId;
+        renovation.updatedAt = workspace.updatedAt = new Date(Math.max(Date.now(), workspace.updatedAt.getTime(), renovation.updatedAt.getTime()));
+        const raw = JSON.stringify(readHomeWorkspace(workspace));
+        await request(metadata.put(raw, workspaceId));
+        return raw;
+      }), { migrate: false });
+      revisions.set(workspaceId, raw); notifyLibraryChange(workspaceId);
+    },
+    /** Archive unreadable wrapper bytes before removing the live metadata entry. */
+    async archiveUnreadableWorkspace(id: string, expectedRaw: string): Promise<void> {
+      if (typeof id !== 'string' || !id.trim() || typeof expectedRaw !== 'string') throw new Error('Workspace ID and exact saved metadata text are required for recovery.');
+      await withDatabase(db => transaction(db, [HOMEFORGE_STORE, 'meta'], 'readwrite', async tx => {
+        const metadata = tx.objectStore(HOMEFORGE_STORE), stored = await request(metadata.get(id));
+        if (stored === undefined) throw new Error('HOMEFORGE workspace is missing.');
+        if (stored !== expectedRaw) throw new Error('HOMEFORGE metadata changed in another operation. Reload before archiving.');
+        let readable = false;
+        try { decode(stored, id); readable = true; } catch {}
+        if (readable) throw new Error('This HOMEFORGE workspace is readable and cannot be archived as unreadable.');
+        const meta = tx.objectStore('meta'), used = new Set((await request(meta.getAllKeys())).map(key => String(key).replace(/^library-recovery:/, '')));
+        const archiveId = allocateId(used);
+        await request(meta.add(JSON.stringify({ format: 'openplan3d-recovery', version: 1, sourceName: 'Unreadable HOMEFORGE workspace',
+          projects: {}, history: {}, thumbnails: {}, metadata: { homeforgeWorkspaces: { [id]: stored } } }), `library-recovery:${archiveId}`));
+        await request(metadata.delete(id));
+      }), { migrate: false });
+      revisions.set(id, null); notifyLibraryChange(id);
+    },
     async activateVariant(workspaceId: string, renovationId: string, variantId: string, expectedProject?: Project): Promise<Project> {
       const expected = expectedProject === undefined ? undefined : JSON.stringify(readProject(expectedProject));
       const result = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, 'projects'], 'readwrite', async tx => {

@@ -13,7 +13,7 @@
   } = $props();
   const client = createHomeforgeStore();
   let workspaces = $state<HomeWorkspace[]>([]);
-  let issues = $state<{ id: string; message: string }[]>([]);
+  let issues = $state<{ id: string; message: string; raw: string }[]>([]);
   let projectStatus = $state<Record<string, 'ready' | 'missing' | 'unreadable'>>({});
   let selectedId = $state('');
   const selected = $derived(workspaces.find(w => w.id === selectedId));
@@ -24,6 +24,8 @@
   let workspaceName = $state(''), renovationName = $state(''), description = $state(''), startingPlan = $state('');
   let workspaceInput = $state<HTMLInputElement>(), renovationInput = $state<HTMLInputElement>();
   let removal = $state<HomeWorkspace | null>(null);
+  let optionRemoval = $state<{ workspaceId: string; renovationId: string; variantId: string; name: string } | null>(null);
+  let archive = $state<{ id: string; raw: string } | null>(null);
   let renovationWorkspaceId = '';
   let request = 0, alive = true;
   onDestroy(() => { alive = false; request++; });
@@ -91,6 +93,27 @@
     const id = removal?.id; if (!id) return;
     await mutate(async () => { await client.delete(id); removal = null; renovationForm = false; });
   }
+  async function beginOptionRemoval(renovationId: string, variantId: string) {
+    if (!selectedId || blocked) return;
+    const workspaceId = selectedId;
+    try {
+      const workspace = await client.load(workspaceId);
+      const variant = workspace?.renovationProjects.find(r => r.id === renovationId)?.variants.find(v => v.id === variantId);
+      if (!variant) throw new Error('Design option changed. Refresh before removing it.');
+      if (alive) optionRemoval = { workspaceId, renovationId, variantId, name: variant.name };
+    } catch (reason) { error = storageErrorMessage(reason); }
+  }
+  async function removeOption() {
+    const target = optionRemoval; if (!target) return;
+    await mutate(async () => {
+      await client.removeVariant(target.workspaceId, target.renovationId, target.variantId);
+      optionRemoval = null;
+    });
+  }
+  async function archiveMetadata() {
+    const target = archive; if (!target) return;
+    await mutate(async () => { await client.archiveUnreadableWorkspace(target.id, target.raw); archive = null; });
+  }
   async function backup() {
     try { await downloadHomeforgeBackup(); } catch (reason) { error = storageErrorMessage(reason); }
   }
@@ -110,7 +133,12 @@
     <button onclick={refreshSafely} disabled={busy} class="text-gray-600 underline disabled:opacity-40">Refresh workspaces</button>
   </div>
   {#if error}<p role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-900">{error}</p>{/if}
-  {#each issues as issue}<p role="alert" class="mt-3 break-words rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{issue.message} Workspace: {issue.id}</p>{/each}
+  {#each issues as issue}
+    <div class="mt-3 break-words rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+      <p role="alert">{issue.message} Workspace: {issue.id}</p>
+      <button disabled={blocked} class="mt-2 underline disabled:opacity-40" onclick={() => archive = { id: issue.id, raw: issue.raw }}>Archive unreadable metadata</button>
+    </div>
+  {/each}
   {#if loading && !workspaces.length}<p role="status" class="mt-4 text-sm text-gray-500">Loading workspaces…</p>{/if}
   {#if busy}<p role="status" class="mt-4 text-sm text-gray-500">Saving HOMEFORGE changes…</p>{/if}
 
@@ -179,6 +207,18 @@
               <a href={`${base}/editor?id=${encodeURIComponent(activeVariant.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}&variant=${encodeURIComponent(activeVariant.id)}`} class="mt-3 inline-block text-sm font-semibold text-blue-600 underline">Continue {activeVariant.name}</a>
             {:else}<p role="alert" class="mt-2 text-sm text-amber-800">Active option is unavailable. Download a HOMEFORGE backup for recovery.</p>{/if}
           {/if}
+          {#if renovation.variants.some(v => v.kind === 'option')}
+            <ul aria-label="Design options" class="mt-3 space-y-2 border-t border-gray-200 pt-3 text-sm">
+              {#each renovation.variants.filter(v => v.kind === 'option') as option (option.id)}
+                <li class="flex flex-wrap items-center justify-between gap-2">
+                  {#if projectStatus[option.projectId] === 'ready'}
+                    <a class="text-blue-600 underline" href={`${base}/editor?id=${encodeURIComponent(option.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}&variant=${encodeURIComponent(option.id)}`}>Open {option.name}</a>
+                  {:else}<span>{option.name} — saved plan unavailable</span>{/if}
+                  <button disabled={blocked} class="text-gray-600 underline disabled:opacity-40" onclick={() => { void beginOptionRemoval(renovation.id, option.id); }}>Remove {option.name}</button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         </article>
       {:else}<p class="text-sm text-gray-500">No renovations yet. Start with one space, such as the front entry.</p>{/each}
     </div>
@@ -192,6 +232,30 @@
     <div class="mt-5 flex justify-end gap-3">
       <button disabled={busy} onclick={() => removal = null} class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Cancel</button>
       <button disabled={busy} onclick={removeMetadata} class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white">Remove metadata</button>
+    </div>
+    {#if error}<p role="alert" class="mt-3 text-sm text-red-800">{error}</p>{/if}
+  </dialog>
+{/if}
+
+{#if optionRemoval}
+  <dialog use:modalDialog aria-label="Remove design option" oncancel={event => { if (busy) event.preventDefault(); else optionRemoval = null; }} class="m-auto w-96 max-w-[calc(100vw-2rem)] rounded-xl bg-white p-5 text-gray-800 shadow-xl backdrop:bg-black/50">
+    <h2 class="font-semibold">Remove design option</h2>
+    <p class="mt-3 text-sm">Remove “{optionRemoval.name}” from this renovation? Its saved editor project, photos and history are retained in the library. Removing the active option returns the renovation pointer to Existing Conditions. Source options with descendants must be kept until those descendants are removed.</p>
+    <div class="mt-5 flex justify-end gap-3">
+      <button disabled={busy} onclick={() => optionRemoval = null}>Cancel</button>
+      <button disabled={busy} onclick={removeOption} class="text-red-700 underline">Remove option</button>
+    </div>
+    {#if error}<p role="alert" class="mt-3 text-sm text-red-800">{error}</p>{/if}
+  </dialog>
+{/if}
+
+{#if archive}
+  <dialog use:modalDialog aria-label="Archive unreadable metadata" oncancel={event => { if (busy) event.preventDefault(); else archive = null; }} class="m-auto w-96 max-w-[calc(100vw-2rem)] rounded-xl bg-white p-5 text-gray-800 shadow-xl backdrop:bg-black/50">
+    <h2 class="font-semibold">Archive unreadable metadata</h2>
+    <p class="mt-3 text-sm">Keep the exact damaged wrapper bytes in local recovery storage and remove its unreadable live entry? Saved editor projects, photos and history are retained. Download a HOMEFORGE backup to export the archive for recovery. This restores access to healthy projects; it does not repair damaged relationships.</p>
+    <div class="mt-5 flex justify-end gap-3">
+      <button disabled={busy} onclick={() => archive = null}>Cancel</button>
+      <button disabled={busy} onclick={archiveMetadata} class="text-red-700 underline">Archive metadata</button>
     </div>
     {#if error}<p role="alert" class="mt-3 text-sm text-red-800">{error}</p>{/if}
   </dialog>

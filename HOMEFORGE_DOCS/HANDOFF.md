@@ -4,9 +4,10 @@ Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repositor
 
 ## Current state
 
-The authorized Windows setup and known-error remediation are complete. M1.1 through M2.2 are committed and pushed to the fork: M1.2 `39ca141`, M1.3 `8ca4d62`, M2.1 `b15ae2c`, M2.2 `caf2ef4`. M2.3 now integrates option creation, safe switching and durable active context; see [M2_3_VARIANT_SWITCHER.md](M2_3_VARIANT_SWITCHER.md). Jesse's continuing milestone objective authorizes implementation and commit/push checkpoints through M2.5. M2.4 baseline enforcement and explicit correction are implemented and verified; the final M2.5 resilience milestone remains pending; hosted deployment remains out of scope.
+The authorized Windows setup, known-error remediation and M1.1–M2.5 development sequence are complete. Every milestone is committed on `foundation-remediation` and pushed to the owner's fork. M2.4 checkpoint: `bbd01528ea88a90b0b844241fb6f692c9618aa7e`. This M2.5 checkpoint completes safe option removal, exact-byte damaged-metadata archival and the resilience audit. Hosted deployment remains out of scope.
 
-Read the current [M2_3_VARIANT_SWITCHER.md](M2_3_VARIANT_SWITCHER.md), [M2_2_CLONE_TO_OPTION.md](M2_2_CLONE_TO_OPTION.md) and [M1_2_COMPLETE.md](M1_2_COMPLETE.md) for APIs/recovery behavior, and [M1_1_DOMAIN_FOUNDATION.md](M1_1_DOMAIN_FOUNDATION.md) for the domain/schema migration. Verification logs for each milestone are retained in EVIDENCE; M0 evidence below remains historical.
+Read [MILESTONE_AUDIT.md](MILESTONE_AUDIT.md), [M2_5_RESILIENCE.md](M2_5_RESILIENCE.md) and [M2_4_BASELINE_PROTECTION.md](M2_4_BASELINE_PROTECTION.md) for current APIs, invariants and evidence. Final gates: 1,260 unit tests in 132 files, 60 browser cases across three engines, zero type-check errors/warnings, production build passed. Logs are retained in EVIDENCE; M0 evidence below remains historical. The original `main` snapshot is older; use `foundation-remediation` for subsequent development.
+
 
 - Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
 - `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
@@ -41,6 +42,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-M2.4 is complete: Existing opens protected and intentional correction is explicit and limited to the editor session. See M2_4_BASELINE_PROTECTION.md. Continue with M2.5 option removal, unreadable metadata recovery and the final resilience audit.
+Use [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) to plan the next homeowner UI slice around the measured front-entry/stair workflow. M1.1–M2.5 are complete; do not repeat those milestones. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes.
 
-Continue the authorized sequence in [M2_IMPLEMENTATION_PLAN.md](M2_IMPLEMENTATION_PLAN.md), committing and pushing each verified milestone to the owner's fork. Independent options, baseline correction/enforcement and resilience are the remaining authorized milestones. Measurement/AI/native-scanner work and hosted deployment remain outside this objective.
+Future controls must use shared mutation/write guards. Deliberate adoption can share a baseline ID across renovations; correction affects all those references. Measurement provenance, native capture, AI, structural/code calculations and deployment remain future decisions. This verified foundation is ready for further UI development; universal bug-free or fully offline behavior has not been claimed.

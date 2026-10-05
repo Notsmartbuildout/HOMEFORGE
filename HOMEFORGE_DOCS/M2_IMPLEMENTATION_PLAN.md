@@ -20,6 +20,6 @@ Each milestone adds focused regressions, runs `npm run check` and `npm test`, an
 - [x] M2.2 complete clone and checkpoint — see M2_2_CLONE_TO_OPTION.md
 - [x] M2.3 save/load/reset and checkpoint — see M2_3_VARIANT_SWITCHER.md
 - [x] M2.4 protection/correction and checkpoint — see M2_4_BASELINE_PROTECTION.md
-- [ ] M2.5 resilience audit and checkpoint
+- [x] M2.5 resilience audit and checkpoint — see M2_5_RESILIENCE.md
 
 Final audit must prove every listed milestone, including live GitHub checkpoints, before completing the active goal. Later measurement, AI, native scanner, structural calculation and hosted deployment features remain outside this objective.
