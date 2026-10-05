@@ -86,7 +86,7 @@ export function createHomeforgeStore() {
     },
     /** Remove relationships only; upstream geometry and recovery assets remain saved. */
     async removeVariant(workspaceId: string, renovationId: string, variantId: string): Promise<void> {
-      const raw = await withDatabase(db => transaction(db, [HOMEFORGE_STORE], 'readwrite', async tx => {
+      const raw = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, HOMEFORGE_ZONE_STORE], 'readwrite', async tx => {
         const metadata = tx.objectStore(HOMEFORGE_STORE), stored = (await request(metadata.get(workspaceId))) ?? null;
         check(workspaceId, stored);
         if (stored === null) throw new Error('HOMEFORGE workspace is missing.');
@@ -98,6 +98,15 @@ export function createHomeforgeStore() {
         renovation.variants = renovation.variants.filter(v => v.id !== variant.id);
         if (renovation.activeVariantId === variant.id) renovation.activeVariantId = renovation.existingVariantId;
         renovation.updatedAt = workspace.updatedAt = new Date(Math.max(Date.now(), workspace.updatedAt.getTime(), renovation.updatedAt.getTime()));
+        const zoneKey = JSON.stringify([workspaceId, renovationId]), zoneStore = tx.objectStore(HOMEFORGE_ZONE_STORE);
+        const zoneRaw = await request(zoneStore.get(zoneKey));
+        if (zoneRaw !== undefined) {
+          const zone = readHomeforgeZone(JSON.parse(zoneRaw));
+          if (zone.workspaceId !== workspaceId || zone.renovationId !== renovationId) throw new Error('Zone identity changed. Reload before removing an option.');
+          for (const feature of zone.features) feature.bindings = feature.bindings.filter(binding => binding.variantId !== variant.id);
+          zone.updatedAt = new Date(Math.max(Date.now(), zone.updatedAt.getTime()));
+          await request(zoneStore.put(JSON.stringify(readHomeforgeZone(zone)), zoneKey));
+        }
         const raw = JSON.stringify(readHomeWorkspace(workspace));
         await request(metadata.put(raw, workspaceId));
         return raw;

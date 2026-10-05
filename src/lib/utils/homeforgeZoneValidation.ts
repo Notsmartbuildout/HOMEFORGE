@@ -42,7 +42,7 @@ export function readHomeforgeZone(_value: unknown): HomeforgeZone {
     const path = `features[${i}]`, item = obj(value, path, ['id', 'kind', 'label', 'description', 'scope', 'relations', 'bindings']);
     choice(item.kind, `${path}.kind`, ['wall', 'door', 'window', 'stair', 'landing', 'opening', 'other']);
     choice(item.scope, `${path}.scope`, ['context', 'focus']); id(item.label, `${path}.label`);
-    if (item.description !== undefined && typeof item.description !== 'string') fail(`${path}.description`);
+    if (item.description !== undefined && (typeof item.description !== 'string' || item.description.length > 1000)) fail(`${path}.description`);
     list(item.relations, `${path}.relations`).forEach((value, j) => {
       const relation = obj(value, `${path}.relations[${j}]`, ['kind', 'featureId']);
       choice(relation.kind, `${path}.relations[${j}].kind`, ['replaces', 'splitFrom', 'mergedFrom']); id(relation.featureId, `${path}.relations[${j}].featureId`);
@@ -52,15 +52,33 @@ export function readHomeforgeZone(_value: unknown): HomeforgeZone {
       const binding = obj(value, `${path}.bindings[${j}]`, ['variantId', 'floorId', 'kind', 'elementId']);
       for (const key of ['variantId', 'floorId', 'elementId']) id(binding[key], `${path}.bindings[${j}].${key}`);
       choice(binding.kind, `${path}.bindings[${j}].kind`, ['walls', 'doors', 'windows', 'stairs', 'rooms']);
+      const expectedKind = { walls: 'wall', doors: 'door', windows: 'window', stairs: 'stair', rooms: 'landing' }[binding.kind as 'walls' | 'doors' | 'windows' | 'stairs' | 'rooms'];
+      if (item.kind !== expectedKind) fail(`${path}.bindings[${j}].kind`);
     }
     if (new Set(bindings.map(b => b.variantId)).size !== bindings.length) fail(`${path}.bindings duplicates a variant`);
     return item;
   });
   const featureIds = unique(features, 'features'), labels = new Set<string>();
+  const boundElements = new Set<string>();
   for (const feature of features) {
     const label = feature.label.toLocaleLowerCase(); if (labels.has(label)) fail('features.label duplicates another label'); labels.add(label);
     for (const relation of feature.relations) if (!featureIds.has(relation.featureId) || relation.featureId === feature.id) fail('features.relations');
+    for (const binding of feature.bindings) {
+      const key = JSON.stringify([binding.variantId, binding.floorId, binding.kind, binding.elementId]);
+      if (boundElements.has(key)) fail('features.bindings duplicates another feature');
+      boundElements.add(key);
+    }
   }
+  const featureById = new Map(features.map(item => [item.id, item]));
+  const visitingFeatures = new Set<string>(), visitedFeatures = new Set<string>();
+  const checkRelations = (featureId: string) => {
+    if (visitingFeatures.has(featureId)) fail('features.relations cycle');
+    if (visitedFeatures.has(featureId)) return;
+    visitingFeatures.add(featureId);
+    for (const relation of featureById.get(featureId)!.relations) checkRelations(relation.featureId);
+    visitingFeatures.delete(featureId); visitedFeatures.add(featureId);
+  };
+  for (const featureId of featureIds) checkRelations(featureId);
   const evidence = list(zone.evidence, 'evidence').map((value, i) => {
     const path = `evidence[${i}]`, item = obj(value, path, ['id', 'sessionId', 'kind', 'scope', 'name', 'capturedAt', 'featureIds', 'category', 'mimeType', 'sha256', 'byteLength']);
     id(item.sessionId, `${path}.sessionId`); if (!sessionIds.has(item.sessionId)) fail(`${path}.sessionId`);
@@ -80,6 +98,8 @@ export function readHomeforgeZone(_value: unknown): HomeforgeZone {
     if (!featureIds.has(item.featureId)) fail(`${path}.featureId`);
     id(item.property, `${path}.property`); positive(item.enteredValue, `${path}.enteredValue`); positive(item.valueCm, `${path}.valueCm`);
     choice(item.unit, `${path}.unit`, ['cm', 'm', 'in', 'ft']);
+    const factor = { cm: 1, m: 100, in: 2.54, ft: 30.48 }[item.unit as 'cm' | 'm' | 'in' | 'ft'];
+    if (Math.abs(item.valueCm - item.enteredValue * factor) > Math.max(1e-9, item.valueCm * 1e-9)) fail(`${path}.valueCm`);
     choice(item.source, `${path}.source`, ['approximate', 'scan-derived', 'manually measured', 'calculated']);
     date(item, 'recordedAt', `${path}.recordedAt`);
     for (const evidenceId of list(item.evidenceIds, `${path}.evidenceIds`)) if (!evidenceIds.has(evidenceId)) fail(`${path}.evidenceIds`);
@@ -92,7 +112,25 @@ export function readHomeforgeZone(_value: unknown): HomeforgeZone {
     return item;
   });
   const measurementIds = unique(measurements, 'measurements');
+  for (const measurement of measurements) if (measurement.source === 'calculated') {
+    const [dependency] = measurement.dependencies;
+    const input = measurements.find(item => item.id === dependency);
+    if (measurement.property !== 'stair.riserHeight' || measurement.unit !== 'cm' || measurement.dependencies.length !== 1 ||
+      !input || input.featureId !== measurement.featureId || input.property !== 'stair.totalRise') fail('measurements.calculated');
+  }
+  const allIds = [...sessionIds, ...featureIds, ...evidenceIds, ...measurementIds];
+  if (new Set(allIds).size !== allIds.length) fail('IDs duplicate another zone record');
   for (const item of measurements) for (const dependency of item.dependencies)
     if (!measurementIds.has(dependency) || dependency === item.id) fail('measurements.dependencies');
+  const byId = new Map(measurements.map(item => [item.id, item]));
+  const visiting = new Set<string>(), visited = new Set<string>();
+  const checkCycle = (measurementId: string) => {
+    if (visiting.has(measurementId)) fail('measurements.dependencies cycle');
+    if (visited.has(measurementId)) return;
+    visiting.add(measurementId);
+    for (const dependency of byId.get(measurementId)!.dependencies) checkCycle(dependency);
+    visiting.delete(measurementId); visited.add(measurementId);
+  };
+  for (const measurementId of measurementIds) checkCycle(measurementId);
   return zone as HomeforgeZone;
 }

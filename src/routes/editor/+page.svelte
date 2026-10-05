@@ -15,6 +15,8 @@
   import { isProtectedBaseline } from '$lib/services/homeforgeReferences';
   import { baselineProtection, protectionError, beginBaselineCorrection, endBaselineCorrection, baselineReadOnly } from '$lib/stores/baselineProtection';
   import { createHomeforgeStore } from '$lib/services/homeforge';
+  import { createHomeforgeZoneStore } from '$lib/services/homeforgeZone';
+  import type { HomeforgeZone } from '$lib/models/homeforgeZone';
   import { refreshSnapshots } from '$lib/stores/versionHistory';
   import { autoSave, markClean, saveState, savingCopy } from '$lib/stores/saveStatus';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
@@ -77,6 +79,13 @@
   let homeforgeContext = $state<Awaited<ReturnType<typeof resolveHomeforgeEditorContext>> | null>(null);
   let returning = $state(false), navigationError = $state<string | null>(null);
   const homeforgeClient = createHomeforgeStore();
+  const zoneClient = createHomeforgeZoneStore();
+  let featureRegistry = $state<HomeforgeZone | null>(null);
+  async function loadFeatureRegistry() {
+    if (!homeforgeContext) { featureRegistry = null; return; }
+    try { featureRegistry = await zoneClient.load(homeforgeContext.workspaceId, homeforgeContext.renovationId); }
+    catch { featureRegistry = null; }
+  }
   let selectedVariantId = $state(''), optionForm = $state(false), optionName = $state('Option A');
   let editorAlive = true;
   let correctionForm = $state(false);
@@ -123,6 +132,7 @@
     url.searchParams.set('id', project.id); url.searchParams.set('variant', variant.id);
     replaceState(url, page.state);
     homeforgeContext = { ...context, variant }; selectedVariantId = variant.id;
+    await loadFeatureRegistry();
     loadProject(project, protectedBaseline); markClean();
     showLayers = false; showUndoHistory = false; buildPanelOpen = false; printOpen = false; commandPaletteOpen = false;
     void refreshSnapshots();
@@ -257,6 +267,7 @@
         const context = await resolveHomeforgeEditorContext(workspace, renovation, url.searchParams.get('variant') ?? undefined);
         if (context.variant.projectId !== id) throw new Error('Existing Conditions reference does not match this editor link. Return to HOMEFORGE for recovery.');
         homeforgeContext = context; selectedVariantId = context.variant.id;
+        await loadFeatureRegistry();
       }
       if (id) {
         const protectedBaseline = await isProtectedBaseline(id);
@@ -305,6 +316,7 @@
       // Imports change the active upstream project; discard the old wrapper link.
       url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation'); url.searchParams.delete('variant');
       homeforgeContext = null;
+      featureRegistry = null;
       url.searchParams.set('id', project.id);
       replaceState(url, page.state);
     });
@@ -401,6 +413,16 @@
           {:else}
             <div class="flex items-center justify-center h-full text-slate-400">{$t('shortcuts.loading3d')}</div>
           {/if}
+        {/if}
+        {#if homeforgeContext && featureRegistry && featureRegistry.features.length}
+          <aside aria-label="Feature legend" class="absolute bottom-4 left-4 z-10 max-h-40 max-w-56 overflow-auto rounded-lg border bg-white/95 p-3 text-xs shadow">
+            <strong>Feature legend</strong>
+            <ul class="mt-1 space-y-1">
+              {#each featureRegistry.features as feature (feature.id)}
+                <li>{feature.label} · {feature.kind} · {feature.bindings.some(binding => binding.variantId === homeforgeContext!.variant.id) ? 'bound' : 'unbound'}</li>
+              {/each}
+            </ul>
+          </aside>
         {/if}
       </div>
       {#if showLayers && mode === '2d'}

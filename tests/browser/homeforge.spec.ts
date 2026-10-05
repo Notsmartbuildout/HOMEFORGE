@@ -34,6 +34,33 @@ test('zone overview opens the exact Existing plan and survives reload', async ({
   await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText(zone.name);
 });
 
+test('zone feature label and measured wall survive reload', async ({ page }) => {
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Entry', source.id);
+  await page.getByRole('article', { name: 'Entry' }).getByRole('link', { name: 'Open zone' }).click();
+  await page.getByLabel('Existing element').selectOption({ index: 1 });
+  await page.getByLabel('Feature label').fill('W1');
+  await page.getByRole('button', { name: 'Save feature' }).click();
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('W1');
+  await page.getByLabel('Measurement property').selectOption('wall.length');
+  await page.getByLabel('Measured value').fill('36');
+  await page.getByLabel('Measurement unit').selectOption('in');
+  await page.getByRole('button', { name: 'Save measurement' }).click();
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('36 in');
+  await page.getByRole('button', { name: 'Verify against Existing' }).click();
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('current');
+  await page.getByRole('button', { name: 'Mark sufficient for now' }).click();
+  await expect(page.getByText('Sufficient for now; remaining gaps stay visible.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('W1');
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('36 in');
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('current');
+  await expect(page.getByText('Sufficient for now; remaining gaps stay visible.')).toBeVisible();
+  await page.getByRole('link', { name: 'Open Existing Conditions' }).click();
+  await expect(page.getByRole('complementary', { name: 'Feature legend' })).toContainText('W1');
+});
+
 for (const width of [1440, 390]) test(`guided capture retains an original photo and exports it at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: 900 }); await page.goto('/');
   await createWorkspace(page); await createRenovation(page);
@@ -47,6 +74,8 @@ for (const width of [1440, 390]) test(`guided capture retains an original photo 
   await page.getByLabel('Photo or import file').setInputFiles({ name: 'item-photo.png', mimeType: 'image/png', buffer: original });
   await page.getByRole('button', { name: 'Save evidence' }).click();
   await expect(page.getByText('item-photo.png')).toBeVisible();
+  await page.getByRole('button', { name: 'Show derived preview' }).click();
+  await expect(page.getByRole('img', { name: 'Derived preview of item-photo.png' })).toBeVisible();
   await page.reload();
   await expect(page.getByText('item-photo.png')).toBeVisible();
   const pending = page.waitForEvent('download');
@@ -71,6 +100,23 @@ for (const width of [1440, 390]) test(`guided capture retains an original photo 
   const copiedBackup = JSON.parse(await readFile((await (await anotherDownload).path())!, 'utf8'));
   expect(Object.values(copiedBackup.evidenceAssets as Record<string, string>).map(encoded => Buffer.from(encoded, 'base64')))
     .toEqual([original, original]);
+});
+
+test('RoomPlan evidence opens a draft review without changing Existing', async ({ page }) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  const before = await savedProjects(page);
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const renovation = workspace.renovationProjects[0];
+  await page.getByRole('article', { name: renovation.name }).getByRole('link', { name: 'Open zone' }).click();
+  await page.getByRole('link', { name: 'Capture Existing Conditions' }).click();
+  await page.getByRole('button', { name: 'Start capture visit' }).click();
+  await page.getByLabel('Evidence type').selectOption('roomplan');
+  await page.getByLabel('Photo or import file').setInputFiles({ name: 'handoff-roomplan.json', mimeType: 'application/json',
+    buffer: await readFile('tests/fixtures/handoff-roomplan.json') });
+  await page.getByRole('button', { name: 'Save evidence' }).click();
+  await page.getByRole('button', { name: 'Review RoomPlan draft' }).click();
+  await expect(page.getByRole('region', { name: 'RoomPlan draft review' })).toContainText('Draft only');
+  expect(await savedProjects(page)).toEqual(before);
 });
 
 test('zone overview does not open missing or unrelated geometry', async ({ page }) => {

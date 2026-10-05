@@ -90,6 +90,7 @@ export function prepareLibraryRestore(raw: string, sourceName = 'Library backup'
     entries.push(Object.freeze({ id, name: project.name || 'Untitled Project', restorable: true, versions: versions.length, warnings: Object.freeze(notes) }));
   }
   const restorableIds = new Set(candidates.map(p => p.sourceId));
+  const restorableProjects = new Map(candidates.map(item => [item.sourceId, readProject(JSON.parse(item.raw))]));
   const workspaceCandidates: HomeWorkspace[] = [];
   const retainedWorkspaces: StringMap = Object.create(null);
   if (homeforge) {
@@ -118,7 +119,11 @@ export function prepareLibraryRestore(raw: string, sourceName = 'Library backup'
         if (key !== JSON.stringify([zone.workspaceId, zone.renovationId])) throw new Error('Zone key mismatch');
         const workspace = workspaceCandidates.find(item => item.id === zone.workspaceId);
         const renovation = workspace?.renovationProjects.find(item => item.id === zone.renovationId);
-        if (!renovation || zone.features.some(feature => feature.bindings.some(binding => !renovation.variants.some(variant => variant.id === binding.variantId))))
+        if (!renovation || zone.features.some(feature => feature.bindings.some(binding => {
+          const variant = renovation.variants.find(item => item.id === binding.variantId);
+          const floor = variant && restorableProjects.get(variant.projectId)?.floors.find(item => item.id === binding.floorId);
+          return !floor?.[binding.kind].some(item => item.id === binding.elementId);
+        })))
           throw new Error('Zone relationships unavailable');
         const assets = new Map<string, Uint8Array>();
         for (const item of zone.evidence) if (item.kind !== 'note') {

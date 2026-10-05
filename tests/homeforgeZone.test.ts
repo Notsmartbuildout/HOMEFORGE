@@ -7,6 +7,10 @@ import { createHomeWorkspace, createHomeforgeStore } from '$lib/services/homefor
 import { createHomeforgeZoneStore } from '$lib/services/homeforgeZone';
 import { readHomeforgeZone } from '$lib/utils/homeforgeZoneValidation';
 import { prepareLibraryRestore } from '$lib/services/libraryRestore';
+import { createLocalStore } from '$lib/services/datastore';
+import { measurementStatus } from '$lib/utils/homeforgeCoverage';
+import { roomProject } from './fixtures/project';
+import { baselineProtection, endBaselineCorrection } from '$lib/stores/baselineProtection';
 
 beforeEach(() => { mockStorage(); });
 
@@ -41,8 +45,63 @@ it('creates one validated zone record for an existing renovation and rejects a w
     sessions: [], evidence: [], features: [], measurements: [] });
   expect(await zones.ensure(workspace.id, renovation.id)).toEqual(record);
   expect(await createHomeforgeZoneStore().load(workspace.id, renovation.id)).toEqual(record);
+  await zones.setSufficient(workspace.id, renovation.id, true);
+  expect((await zones.load(workspace.id, renovation.id))?.sufficientAt).toBeInstanceOf(Date);
+  await zones.setSufficient(workspace.id, renovation.id, false);
+  expect((await zones.load(workspace.id, renovation.id))?.sufficientAt).toBeUndefined();
+  const first = await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W1', scope: 'focus' });
+  const replacement = await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W2', scope: 'focus' });
+  await zones.addRelation(workspace.id, renovation.id, replacement.id, { kind: 'replaces', featureId: first.id });
+  await expect(zones.addRelation(workspace.id, renovation.id, first.id, { kind: 'replaces', featureId: replacement.id }))
+    .rejects.toThrow(/cycle/i);
   await expect(zones.ensure(workspace.id, 'wrong')).rejects.toThrow(/unavailable/i);
   expect(() => readHomeforgeZone({ ...record, schemaVersion: 2 })).toThrow(/schemaVersion/);
+  expect(() => readHomeforgeZone({ ...record, sessions: [{ id: 'reused', startedAt: new Date() }],
+    features: [{ id: 'reused', kind: 'wall', label: 'W1', scope: 'focus', relations: [], bindings: [] }] })).toThrow(/duplicate/i);
+});
+
+it('records a bound measured wall dimension and detects later geometry changes', async () => {
+  const homeforge = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await homeforge.save(workspace);
+  const project = roomProject(), renovation = await homeforge.createRenovationProject(workspace.id, { name: 'Entry', project });
+  const zones = createHomeforgeZoneStore(); await zones.ensure(workspace.id, renovation.id);
+  const feature = await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W1', scope: 'focus',
+    binding: { variantId: renovation.existingVariantId, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id } });
+  await zones.updateFeature(workspace.id, renovation.id, feature.id, { label: 'Entry wall', description: 'East side' });
+  expect((await zones.load(workspace.id, renovation.id))?.features[0]).toMatchObject({ label: 'Entry wall', description: 'East side' });
+  const measurement = await zones.addMeasurement(workspace.id, renovation.id, { featureId: feature.id, property: 'wall.length',
+    enteredValue: 36, unit: 'in', source: 'manually measured', evidenceIds: [] });
+  expect(measurement.valueCm).toBeCloseTo(91.44);
+  const verified = await zones.verifyMeasurement(workspace.id, renovation.id, measurement.id);
+  const current = (await zones.load(workspace.id, renovation.id))!;
+  expect(measurementStatus(current, verified, project, renovation.existingVariantId)).toBe('current');
+  const local = createLocalStore(), saved = (await local.load(renovation.variants[0].projectId))!;
+  saved.floors[0].walls[0].end.x += 20;
+  await expect(local.save(saved)).rejects.toThrow(/protected/);
+  baselineProtection.set({ projectId: saved.id, correcting: true });
+  await local.save(saved); endBaselineCorrection(); baselineProtection.set({ projectId: null, correcting: false });
+  expect(measurementStatus(current, verified, saved, renovation.existingVariantId)).toBe('stale');
+  await expect(zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'Entry wall', scope: 'focus' })).rejects.toThrow(/label/i);
+  await expect(zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W2', scope: 'focus',
+    binding: { variantId: renovation.existingVariantId, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id } }))
+    .rejects.toThrow(/already bound/i);
+  expect(() => readHomeforgeZone({ ...current, measurements: [{ ...measurement, valueCm: 1 }] })).toThrow(/valueCm/i);
+});
+
+it('calculates stair riser height only from saved rise and riser count', async () => {
+  const homeforge = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await homeforge.save(workspace);
+  const project = roomProject();
+  project.floors[0].stairs.push({ id: 'stair-1', position: { x: 0, y: 0 }, rotation: 0, width: 100, depth: 300, riserCount: 14, direction: 'up', stairType: 'straight' });
+  const renovation = await homeforge.createRenovationProject(workspace.id, { name: 'Entry', project });
+  const zones = createHomeforgeZoneStore(); await zones.ensure(workspace.id, renovation.id);
+  const feature = await zones.addFeature(workspace.id, renovation.id, { kind: 'stair', label: 'S1', scope: 'focus',
+    binding: { variantId: renovation.existingVariantId, floorId: project.floors[0].id, kind: 'stairs', elementId: 'stair-1' } });
+  const rise = await zones.addMeasurement(workspace.id, renovation.id, { featureId: feature.id, property: 'stair.totalRise',
+    enteredValue: 280, unit: 'cm', source: 'manually measured', evidenceIds: [] });
+  await expect(zones.addMeasurement(workspace.id, renovation.id, { featureId: feature.id, property: 'stair.riserHeight',
+    enteredValue: 21, unit: 'cm', source: 'calculated', evidenceIds: [], dependencies: [rise.id] })).rejects.toThrow(/changed/i);
+  const derived = await zones.addMeasurement(workspace.id, renovation.id, { featureId: feature.id, property: 'stair.riserHeight',
+    enteredValue: 20, unit: 'cm', source: 'calculated', evidenceIds: [], dependencies: [rise.id] });
+  expect(derived.valueCm).toBe(20);
 });
 
 it('commits original photo bytes and their zone evidence record together', async () => {
@@ -56,6 +115,9 @@ it('commits original photo bytes and their zone evidence record together', async
   bytes.fill(0);
   expect((await zones.load(workspace.id, renovation.id))!.evidence[0]).toEqual(evidence);
   expect(await zones.readEvidenceBytes(workspace.id, renovation.id, evidence.id)).toEqual(new Uint8Array(await readFile('tests/fixtures/item-photo.png')));
+  const feature = await zones.addFeature(workspace.id, renovation.id, { kind: 'other', label: 'Entry detail', scope: 'focus' });
+  await zones.linkEvidence(workspace.id, renovation.id, evidence.id, feature.id);
+  expect((await zones.load(workspace.id, renovation.id))!.evidence[0].featureIds).toEqual([feature.id]);
 });
 
 it('keeps zone metadata and bytes unchanged when the asset write fails', async () => {
@@ -115,16 +177,16 @@ it('restores a zone as an independent copy with original evidence bytes', async 
 
 it('remaps populated zone relationships without changing live workspace or project records', async () => {
   const homeforge = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await homeforge.save(workspace);
-  const renovation = await homeforge.createRenovationProject(workspace.id, { name: 'Entry' });
+  const project = roomProject(), renovation = await homeforge.createRenovationProject(workspace.id, { name: 'Entry', project });
   const option = await homeforge.cloneVariant(workspace.id, renovation.id, renovation.existingVariantId, 'Option A');
   const zones = createHomeforgeZoneStore(), zone = await zones.ensure(workspace.id, renovation.id);
   const session = await zones.addSession(workspace.id, renovation.id);
   const evidence = await zones.addEvidence(workspace.id, renovation.id, session.id,
     { kind: 'photo', scope: 'focus', name: 'Entry.png', mimeType: 'image/png', bytes: new Uint8Array(await readFile('tests/fixtures/item-photo.png')) });
-  const feature = { id: 'door-feature', kind: 'door', label: 'D1', scope: 'focus', relations: [],
-    bindings: [{ variantId: renovation.existingVariantId, floorId: 'floor-1', kind: 'doors', elementId: 'door-1' },
-      { variantId: option.id, floorId: 'floor-1', kind: 'doors', elementId: 'door-1' }] };
-  const measurement = { id: 'door-width', featureId: feature.id, property: 'door.width', enteredValue: 36, unit: 'in',
+  const feature = { id: 'wall-feature', kind: 'wall', label: 'W1', scope: 'focus', relations: [],
+    bindings: [{ variantId: renovation.existingVariantId, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id },
+      { variantId: option.id, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id }] };
+  const measurement = { id: 'wall-length', featureId: feature.id, property: 'wall.length', enteredValue: 36, unit: 'in',
     valueCm: 91.44, recordedAt: new Date(), source: 'manually measured', evidenceIds: [evidence.id], dependencies: [],
     verified: { valueCm: 91.44, geometryFingerprint: 'door-width-91.44', verifiedAt: new Date() } };
   const enriched = readHomeforgeZone({ ...zone, sessions: [session], evidence: [evidence], features: [feature], measurements: [measurement] });
@@ -172,6 +234,23 @@ it('keeps damaged evidence with its zone in recovery instead of opening an incom
   const restored = (await createHomeforgeStore().load(result.workspaces![0].id))!;
   expect(await createHomeforgeZoneStore().load(restored.id, restored.renovationProjects[0].id)).toBeNull();
   expect((await homeforgeBackup())).toContain('not-base64');
+});
+
+it('keeps a zone with an unmatched editor binding in recovery on restore', async () => {
+  const homeforge = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await homeforge.save(workspace);
+  const project = roomProject(), renovation = await homeforge.createRenovationProject(workspace.id, { name: 'Entry', project });
+  const zones = createHomeforgeZoneStore(); await zones.ensure(workspace.id, renovation.id);
+  await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W1', scope: 'focus',
+    binding: { variantId: renovation.existingVariantId, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id } });
+  const backup = JSON.parse(await homeforgeBackup()), key = JSON.stringify([workspace.id, renovation.id]);
+  const damaged = JSON.parse(backup.zones[key]); damaged.features[0].bindings[0].elementId = 'missing-wall';
+  backup.zones[key] = JSON.stringify(damaged);
+  const preview = prepareLibraryRestore(JSON.stringify(backup));
+  expect(preview.warnings.some(message => /kept for recovery/.test(message))).toBe(true);
+  const result = await preview.restore();
+  const copy = (await createHomeforgeStore().load(result.workspaces![0].id))!;
+  expect(await createHomeforgeZoneStore().load(copy.id, copy.renovationProjects[0].id)).toBeNull();
+  expect(await homeforgeBackup()).toContain('missing-wall');
 });
 
 it('archives an evidence asset whose bytes changed without changing its length', async () => {

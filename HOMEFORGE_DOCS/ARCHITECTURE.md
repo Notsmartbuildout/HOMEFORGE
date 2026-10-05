@@ -12,6 +12,8 @@ M2.1 requires one Existing variant per renovation. M2.2 design alternatives are 
 
 Measurement provenance belongs to individual dimensions, not whole objects: approximate, scan-derived, manually measured, calculated. A calculated value retains dependencies; changing geometry invalidates stale measurement verification. User input needs units, date, source and the value/geometry verified. Verification means provenance, not an engineering guarantee.
 
+M4 stores zone-owned sessions, original evidence assets, features and measurements separately from upstream projects in additive IndexedDB version 3. HOMEFORGE backup v2 includes those bytes; project-only export omits them. Feature bindings refer to variant/floor/element IDs and are copied with new options. Earlier options can be matched explicitly, while missing restore targets stay in recovery. Coverage and current/stale measurement status are derived from the saved zone and relevant Existing geometry. RoomPlan files are retained as evidence and converted only into a review draft until the protected proposal workflow exists.
+
 RoomPlan import is inherited; native iOS capture is not assumed available. Photo underlay calibration is reliable for plans or suitable orthographic images; scaling a perspective photograph cannot make all its geometry dimensionally accurate.
 
 Local editing must work without login. Disable analytics and cloud uploads locally. Inventory inherited cloud, sharing, assistant and external asset paths before a homeowner release; configuration alone is not proof of full offline behaviour.

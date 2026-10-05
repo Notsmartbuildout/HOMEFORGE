@@ -90,6 +90,38 @@ it('copies confirmed feature bindings into a new option in the clone transaction
   expect(copied?.features[0].bindings).toContainEqual({ ...feature.bindings[0], variantId: option.id });
 });
 
+it('lets an older option receive a reviewed feature binding', async () => {
+  const client = createHomeforgeStore(), workspace = createHomeWorkspace('Home'); await client.save(workspace);
+  const project = roomProject(), renovation = await client.createRenovationProject(workspace.id, { name: 'Entry', project });
+  const source = renovation.variants[0], option = await client.cloneVariant(workspace.id, renovation.id, source.id, 'Older option');
+  const zones = createHomeforgeZoneStore(); await zones.ensure(workspace.id, renovation.id);
+  const feature = await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W1', scope: 'focus',
+    binding: { variantId: source.id, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id } });
+  expect((await zones.load(workspace.id, renovation.id))?.features[0].bindings).toHaveLength(1);
+  await zones.bindFeature(workspace.id, renovation.id, feature.id,
+    { variantId: option.id, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id });
+  expect((await zones.load(workspace.id, renovation.id))?.features[0].bindings.map(item => item.variantId)).toEqual([source.id, option.id]);
+});
+
+it('removes a deleted option binding without changing its retained project or the Existing binding', async () => {
+  const { client, workspace, renovation, source, project } = await fixture();
+  const zones = createHomeforgeZoneStore(); await zones.ensure(workspace.id, renovation.id);
+  const feature = await zones.addFeature(workspace.id, renovation.id, { kind: 'wall', label: 'W1', scope: 'focus',
+    binding: { variantId: source.id, floorId: project.floors[0].id, kind: 'walls', elementId: project.floors[0].walls[0].id } });
+  const option = await client.cloneVariant(workspace.id, renovation.id, source.id, 'Option A');
+  const projects = await rawRecords();
+  const metadata = await rawRecords('homeforgeWorkspaces'), zoneRecords = await rawRecords('homeforgeZones');
+  const restoreWrites = failWrites('homeforgeZones');
+  await expect(client.removeVariant(workspace.id, renovation.id, option.id)).rejects.toMatchObject({ name: 'QuotaExceededError' });
+  restoreWrites();
+  expect(await rawRecords('homeforgeWorkspaces')).toEqual(metadata);
+  expect(await rawRecords('homeforgeZones')).toEqual(zoneRecords);
+  await client.removeVariant(workspace.id, renovation.id, option.id);
+  const saved = (await createHomeforgeZoneStore().load(workspace.id, renovation.id))!;
+  expect(saved.features.find(item => item.id === feature.id)?.bindings.map(item => item.variantId)).toEqual([source.id]);
+  expect(await rawRecords()).toEqual(projects);
+});
+
 it('rejects stale workspace or source revisions without partial copies', async () => {
   const { client, workspace, renovation, source, project } = await fixture();
   const other = createHomeforgeStore(), edited = (await other.load(workspace.id))!;
