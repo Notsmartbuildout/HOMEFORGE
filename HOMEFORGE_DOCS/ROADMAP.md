@@ -12,6 +12,7 @@
 - M2.4: protected Existing Conditions with explicit session correction, shared mutation/write guards and preserved view/export operations. 1,245 unit tests, 48 targeted browser cases, type checking and production build pass. See M2_4_BASELINE_PROTECTION.md.
 - M2.5: safe option removal and exact-byte metadata recovery; final resilience audit complete. 1,260 unit tests, 60 targeted browser cases, type checking and production build pass. See M2_5_RESILIENCE.md.
 - M3: direct manipulation and concise numeric property editing.
+- M3.1: zone overview and editor return path implemented on `foundation-remediation`. The existing wall, opening and stair numeric controls and canvas manipulation were inspected and reused; no duplicate editor was added. Type check, 1,260 unit tests, production build and 18 relevant browser cases across Chromium/Firefox/WebKit pass. Guided capture, persistent legend identity and comparison remain planned. See M3_M6_DESIGN.md and M3_M6_IMPLEMENTATION_PLAN.md.
 - M4: import/calibration and dimension-level provenance, with invalidation rules.
 - M5: measured front-entry and stair workflow, useful elevation output, export review and recovery tests.
 

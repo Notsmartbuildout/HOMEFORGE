@@ -154,12 +154,14 @@
     finally { selectedVariantId = homeforgeContext?.variant.id ?? ''; returning = false; }
   }
 
-  async function returnToRenovations() {
+  async function returnToRenovations(destination: 'dashboard' | 'zone' = 'dashboard') {
     if (returning || !homeforgeContext) return;
     returning = true; navigationError = null;
     try {
       await saveBeforeTransition();
-      await goto(`${base}/?workspace=${encodeURIComponent(homeforgeContext.workspaceId)}`);
+      await goto(destination === 'zone'
+        ? `${base}/zone?workspace=${encodeURIComponent(homeforgeContext.workspaceId)}&renovation=${encodeURIComponent(homeforgeContext.renovationId)}`
+        : `${base}/?workspace=${encodeURIComponent(homeforgeContext.workspaceId)}`);
     } catch (error) { navigationError = storageErrorMessage(error); }
     finally { returning = false; }
   }
@@ -349,7 +351,8 @@
     {#if homeforgeContext}
       <nav aria-label="HOMEFORGE editor context" class="h-24 md:h-12 shrink-0 flex flex-col md:flex-row justify-center md:items-center gap-2 px-3 bg-slate-100 border-b border-slate-200 text-sm">
         <div class="flex items-center gap-3 min-w-0 flex-1">
-        <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={returnToRenovations}>Return to renovations</button>
+        <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={() => returnToRenovations()}>Return to renovations</button>
+        <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={() => returnToRenovations('zone')}>Back to zone</button>
         <span class="min-w-0 truncate" title={`${homeforgeContext.workspaceName} / ${homeforgeContext.renovationName} / ${homeforgeContext.variant.name}`}>
           {homeforgeContext.workspaceName} / <strong>{homeforgeContext.renovationName}</strong> / {homeforgeContext.variant.name}
         </span>

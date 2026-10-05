@@ -20,6 +20,43 @@ test.beforeEach(async ({ context }, testInfo) => {
   if (!testInfo.title.startsWith('first visit')) await context.addInitScript(() => { localStorage.setItem('hasSeenWelcome', 'true'); });
 });
 
+test('zone overview opens the exact Existing plan and survives reload', async ({ page }) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Front entry and stairs');
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const zone = workspace.renovationProjects[0];
+  await page.getByRole('article', { name: zone.name }).getByRole('link', { name: 'Open zone' }).click();
+  await expect(page).toHaveURL(new RegExp(`/zone\\?workspace=${workspace.id}&renovation=${zone.id}`));
+  await expect(page.getByRole('heading', { name: zone.name })).toBeVisible();
+  await page.reload();
+  await page.getByRole('link', { name: 'Open Existing Conditions' }).click();
+  await expect(page).toHaveURL(new RegExp(`id=${zone.variants[0].projectId}`));
+  await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText(zone.name);
+});
+
+test('zone overview does not open missing or unrelated geometry', async ({ page }) => {
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const zone = workspace.renovationProjects[0];
+  await page.evaluate(async id => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const opening = indexedDB.open('openplan3d-local');
+      opening.onsuccess = () => resolve(opening.result); opening.onerror = () => reject(opening.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('projects', 'readwrite');
+      tx.objectStore('projects').delete(id);
+      tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  }, zone.variants[0].projectId);
+  await page.goto(`/zone?workspace=${workspace.id}&renovation=${zone.id}`);
+  await expect(page.getByRole('alert')).toContainText('missing');
+  await expect(page.getByRole('link', { name: 'Open Existing Conditions' })).toHaveCount(0);
+  await page.goto('/zone?workspace=wrong&renovation=wrong');
+  await expect(page.getByRole('alert')).toContainText('unavailable');
+  await expect(page.getByRole('link', { name: 'Open Existing Conditions' })).toHaveCount(0);
+});
+
 for (const width of [1440, 700, 390]) {
   test(`workspace and Existing Conditions persist and open the exact editor project at ${width}px`, async ({ page }, testInfo) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
@@ -180,7 +217,7 @@ test('failed option save blocks switching and preserves the active pointer until
   expect((await savedProjects(page))[option.projectId].name).toBe('Pending option');
 });
 
-test('editor return retains unsaved edits when persistence fails and recovers after retry', async ({ page }) => {
+test('back to zone retains unsaved edits when persistence fails and recovers after retry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto('/'); await createWorkspace(page); await createRenovation(page);
   await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
@@ -198,7 +235,7 @@ test('editor return retains unsaved edits when persistence fails and recovers af
   await page.getByRole('button', { name: 'Front entry', exact: true }).click();
   await page.getByRole('textbox', { name: 'Project name' }).fill('Corrected entry');
   await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
-  await page.getByRole('button', { name: 'Return to renovations' }).click();
+  await page.getByRole('button', { name: 'Back to zone' }).click({ timeout: 5000 });
   await expect(page.getByRole('alert').filter({ hasText: 'latest edits could not be saved' })).toBeVisible();
   await page.getByRole('button', { name: 'Toggle tools panel', exact: true }).click();
   const drawerTop = await page.locator('div.max-md\\:fixed').evaluate(el => el.getBoundingClientRect().top);
@@ -207,8 +244,8 @@ test('editor return retains unsaved edits when persistence fails and recovers af
   await expect(page).toHaveURL(/\/editor/);
   await expect(page.getByRole('button', { name: 'Corrected entry', exact: true })).toBeVisible();
   await page.evaluate(() => { (window as any).homeforgeSaveFailure = false; });
-  await page.getByRole('button', { name: 'Return to renovations' }).click();
-  await expect(page.getByRole('article', { name: 'Front entry', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to zone' }).click();
+  await expect(page.getByRole('heading', { name: 'Front entry', exact: true })).toBeVisible();
   expect(Object.values(await savedProjects(page))[0].name).toBe('Corrected entry');
 });
 

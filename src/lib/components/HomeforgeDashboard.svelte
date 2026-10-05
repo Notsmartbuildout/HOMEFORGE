@@ -195,6 +195,7 @@
         <article aria-label={renovation.name} class="min-w-0 rounded-lg border border-gray-200 p-4">
           <h3 class="break-words font-semibold">{renovation.name}</h3>
           {#if renovation.description}<p class="mt-1 break-words text-sm text-gray-500">{renovation.description}</p>{/if}
+          <a class="mt-2 inline-block text-sm font-semibold text-blue-600 underline" href={`${base}/zone?workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}`}>Open zone</a>
           <p class="mt-3 text-sm font-medium">Existing Conditions</p>
           {#if projectStatus[variant.projectId] === 'ready'}
             <a href={`${base}/editor?id=${encodeURIComponent(variant.projectId)}&homeforge=1&workspace=${encodeURIComponent(selected.id)}&renovation=${encodeURIComponent(renovation.id)}`} class="mt-2 inline-block text-sm font-semibold text-blue-600 underline">Open Existing Conditions</a>
