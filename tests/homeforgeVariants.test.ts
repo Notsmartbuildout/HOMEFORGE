@@ -5,6 +5,8 @@ import { createLocalStore } from '$lib/services/datastore';
 import { readSnapshotStorage, writeSnapshotStorage } from '$lib/utils/snapshotStorage';
 import { mockStorage, putRaw, rawRecords, failWrites } from './fixtures/indexeddb';
 import { roomProject } from './fixtures/project';
+import { createHomeforgeZoneStore } from '$lib/services/homeforgeZone';
+import { readHomeforgeZone } from '$lib/utils/homeforgeZoneValidation';
 
 beforeEach(() => { mockStorage(); });
 
@@ -75,6 +77,17 @@ it('supports cloning an option while preserving source provenance and unique IDs
   expect(b.createdFromVariantId).toBe(a.id);
   expect(new Set([source.id, a.id, b.id, source.projectId, a.projectId, b.projectId]).size).toBe(6);
   expect((await client.load(workspace.id))!.renovationProjects[0].variants.filter(v => v.kind === 'existing')).toHaveLength(1);
+});
+
+it('copies confirmed feature bindings into a new option in the clone transaction', async () => {
+  const { client, workspace, renovation, source, project } = await fixture();
+  const zones = createHomeforgeZoneStore(), zone = await zones.ensure(workspace.id, renovation.id);
+  const feature = { id: 'entry-door', kind: 'door', label: 'D1', scope: 'focus', relations: [],
+    bindings: [{ variantId: source.id, floorId: project.floors[0].id, kind: 'doors', elementId: 'door-1' }] };
+  await putRaw('homeforgeZones', JSON.stringify([workspace.id, renovation.id]), JSON.stringify(readHomeforgeZone({ ...zone, features: [feature] })));
+  const option = await client.cloneVariant(workspace.id, renovation.id, source.id, 'Option A');
+  const copied = await createHomeforgeZoneStore().load(workspace.id, renovation.id);
+  expect(copied?.features[0].bindings).toContainEqual({ ...feature.bindings[0], variantId: option.id });
 });
 
 it('rejects stale workspace or source revisions without partial copies', async () => {

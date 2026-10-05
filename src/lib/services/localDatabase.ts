@@ -5,9 +5,11 @@ export const DATABASE_NAME = 'openplan3d-local';
 export const PROJECTS_STORAGE_KEY = 'floorplan_projects';
 export const LIBRARY_CHANGE_KEY = 'openplan3d-library-change';
 export const STORES = ['projects', 'thumbnails', 'history', 'meta'] as const;
-export const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 3;
 export const HOMEFORGE_STORE = 'homeforgeWorkspaces';
-export type StoreName = typeof STORES[number] | typeof HOMEFORGE_STORE;
+export const HOMEFORGE_ZONE_STORE = 'homeforgeZones';
+export const HOMEFORGE_EVIDENCE_ASSET_STORE = 'homeforgeEvidenceAssets';
+export type StoreName = typeof STORES[number] | typeof HOMEFORGE_STORE | typeof HOMEFORGE_ZONE_STORE | typeof HOMEFORGE_EVIDENCE_ASSET_STORE;
 type Legacy = Record<string, string>;
 
 export function request<T>(req: IDBRequest<T>): Promise<T> {
@@ -27,6 +29,10 @@ async function openDatabase(): Promise<IDBDatabase> {
       // Explicit additive migrations; inherited records and recovery bytes stay intact.
       if (event.oldVersion < 1) for (const name of STORES) req.result.createObjectStore(name);
       if (event.oldVersion < 2) req.result.createObjectStore(HOMEFORGE_STORE);
+      if (event.oldVersion < 3) {
+        req.result.createObjectStore(HOMEFORGE_ZONE_STORE);
+        req.result.createObjectStore(HOMEFORGE_EVIDENCE_ASSET_STORE);
+      }
     };
     req.onblocked = () => {
       blocked = true;
@@ -194,17 +200,31 @@ export async function records(tx: IDBTransaction, name: StoreName): Promise<Reco
 async function backup(includeHomeforge: boolean): Promise<string> {
   const db = await openDatabase();
   try {
-    return await transaction(db, includeHomeforge ? [...STORES, HOMEFORGE_STORE] : [...STORES], 'readonly', async tx => {
+    return await transaction(db, includeHomeforge ? [...STORES, HOMEFORGE_STORE, HOMEFORGE_ZONE_STORE, HOMEFORGE_EVIDENCE_ASSET_STORE] : [...STORES], 'readonly', async tx => {
       const [projects, thumbnails, history, original, previous, meta] = await Promise.all([
         records(tx, 'projects'), records(tx, 'thumbnails'), records(tx, 'history'),
         request(tx.objectStore('meta').get('legacy-original')), request(tx.objectStore('meta').get('legacy-current')),
         records(tx, 'meta'),
       ]);
       const workspaces = includeHomeforge ? await records(tx, HOMEFORGE_STORE) : undefined;
+      const zones = includeHomeforge ? await records(tx, HOMEFORGE_ZONE_STORE) : undefined;
+      let evidenceAssets: Record<string, string> | undefined;
+      if (includeHomeforge) {
+        const assets = tx.objectStore(HOMEFORGE_EVIDENCE_ASSET_STORE);
+        const keys = await request(assets.getAllKeys()), values = await request(assets.getAll());
+        evidenceAssets = Object.fromEntries(keys.map((key, index) => {
+          const bytes = values[index];
+          if (!(bytes instanceof Uint8Array)) throw new Error('Saved evidence bytes are unreadable. Download a recovery backup before changing browser storage.');
+          let encoded = '';
+          for (let offset = 0; offset < bytes.length; offset += 0x8000)
+            encoded += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+          return [String(key), btoa(encoded)];
+        }));
+      }
       const current = legacyStorage();
       if (!includeHomeforge && !original && !Object.keys(projects).length && current[PROJECTS_STORAGE_KEY] !== undefined) return current[PROJECTS_STORAGE_KEY];
-      return JSON.stringify({ format: includeHomeforge ? 'homeforge-library' : 'openplan3d-library', version: 1, projects, thumbnails, history,
-        ...(includeHomeforge ? { workspaces } : {}),
+      return JSON.stringify({ format: includeHomeforge ? 'homeforge-library' : 'openplan3d-library', version: includeHomeforge ? 2 : 1, projects, thumbnails, history,
+        ...(includeHomeforge ? { workspaces, zones, evidenceAssets } : {}),
         legacy: { original, previous, current },
         recovery: Object.fromEntries(Object.entries(meta).filter(([key]) => key.startsWith('library-recovery:'))
           .map(([key, raw]) => [key.slice('library-recovery:'.length), raw])) });

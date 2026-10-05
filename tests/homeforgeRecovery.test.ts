@@ -23,7 +23,7 @@ it('exports raw metadata and geometry in one consistent read transaction, includ
   await putRaw('homeforgeWorkspaces', 'broken', '{unreadable workspace');
   await putRaw('history', project.id, '{unreadable history');
   const data = JSON.parse(await homeforgeBackup());
-  expect(data.format).toBe('homeforge-library'); expect(data.version).toBe(1);
+  expect(data.format).toBe('homeforge-library'); expect(data.version).toBe(2);
   expect(JSON.parse(data.workspaces[workspace.id]).renovationProjects[0].variants[0].projectId).toBe(project.id);
   expect(data.workspaces.broken).toBe('{unreadable workspace');
   expect(data.history[project.id]).toBe('{unreadable history');
@@ -155,7 +155,7 @@ it('cancels before and during restore without leaving partial records', async ()
 });
 
 it('rejects unsupported envelopes and duplicate backup keys before any storage operation', () => {
-  expect(() => prepareLibraryRestore('{"format":"homeforge-library","version":2,"projects":{},"workspaces":{}}')).toThrow(/version/);
+  expect(() => prepareLibraryRestore('{"format":"homeforge-library","version":3,"projects":{},"workspaces":{}}')).toThrow(/version/);
   expect(() => prepareLibraryRestore('{"format":"homeforge-library","version":1,"projects":{},"workspaces":{},"workspaces":{}}')).toThrow(/repeats/);
 });
 

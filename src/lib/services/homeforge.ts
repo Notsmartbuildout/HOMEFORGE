@@ -2,10 +2,11 @@ import type { DesignVariant, HomeWorkspace, RenovationProject } from '$lib/model
 import type { Project } from '$lib/models/types';
 import { createDefaultProject } from '$lib/stores/project';
 import { readHomeWorkspace } from '$lib/utils/homeforgeValidation';
+import { readHomeforgeZone } from '$lib/utils/homeforgeZoneValidation';
 import { readProject } from '$lib/utils/projectValidation';
 import { parseBackup } from '$lib/utils/parseBackup';
 import { readSnapshotStorage, writeSnapshotStorage } from '$lib/utils/snapshotStorage';
-import { HOMEFORGE_STORE, notifyLibraryChange, records, request, transaction, withDatabase } from './localDatabase';
+import { HOMEFORGE_STORE, HOMEFORGE_ZONE_STORE, notifyLibraryChange, records, request, transaction, withDatabase } from './localDatabase';
 
 const newId = () => globalThis.crypto?.randomUUID?.() ?? `homeforge-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 function allocateId(used: Set<string>) {
@@ -145,7 +146,7 @@ export function createHomeforgeStore() {
     async cloneVariant(workspaceId: string, renovationId: string, sourceVariantId: string, name: string, expectedProject?: Project): Promise<DesignVariant> {
       if (typeof name !== 'string' || !name.trim()) throw new Error('Option name must be nonempty text.');
       const expected = expectedProject === undefined ? undefined : JSON.stringify(readProject(expectedProject));
-      const result = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, 'projects', 'thumbnails', 'history'], 'readwrite', async tx => {
+      const result = await withDatabase(db => transaction(db, [HOMEFORGE_STORE, HOMEFORGE_ZONE_STORE, 'projects', 'thumbnails', 'history'], 'readwrite', async tx => {
         const metadata = tx.objectStore(HOMEFORGE_STORE), projects = tx.objectStore('projects');
         const stored = (await request(metadata.get(workspaceId))) ?? null;
         check(workspaceId, stored);
@@ -177,11 +178,24 @@ export function createHomeforgeStore() {
           } catch { throw new Error('Source version history is unreadable. Download a HOMEFORGE backup for recovery before creating an option.'); }
         }
         const thumbnail = await request(tx.objectStore('thumbnails').get(source.projectId));
+        const zoneKey = JSON.stringify([workspaceId, renovationId]);
+        const zoneStore = tx.objectStore(HOMEFORGE_ZONE_STORE), zoneRaw = await request(zoneStore.get(zoneKey));
+        let zone: ReturnType<typeof readHomeforgeZone> | undefined;
+        if (zoneRaw !== undefined) {
+          zone = readHomeforgeZone(JSON.parse(zoneRaw));
+          if (zone.workspaceId !== workspaceId || zone.renovationId !== renovationId) throw new Error('Zone identity changed. Reload before creating an option.');
+          for (const feature of zone.features) {
+            const binding = feature.bindings.find(item => item.variantId === source.id);
+            if (binding) feature.bindings.push({ ...binding, variantId: variant.id });
+          }
+          zone.updatedAt = new Date(Math.max(now.getTime(), zone.updatedAt.getTime()));
+        }
         renovation.variants.push(variant); renovation.updatedAt = workspace.updatedAt = now;
         const raw = JSON.stringify(readHomeWorkspace(workspace));
         await request(projects.add(JSON.stringify(copy), copy.id));
         if (thumbnail !== undefined) await request(tx.objectStore('thumbnails').add(thumbnail, copy.id));
         if (copiedHistory !== undefined) await request(history.add(copiedHistory, copy.id));
+        if (zone) await request(zoneStore.put(JSON.stringify(readHomeforgeZone(zone)), zoneKey));
         await request(metadata.put(raw, workspace.id));
         return { variant, raw };
       }));

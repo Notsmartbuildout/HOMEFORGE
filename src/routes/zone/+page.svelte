@@ -72,13 +72,14 @@
       <section class="mt-4 rounded-xl border bg-white p-5" aria-label="Renovation workflow">
         <h2 class="text-lg font-semibold">Your workflow</h2>
         <ol class="mt-2 list-inside list-decimal space-y-1 text-sm text-slate-700">
-          <li>Gather photos, plans and measurements for this area. Guided capture is not available yet.</li>
+          <li><a class="font-semibold text-blue-700 underline" href={`${base}/capture?workspace=${encodeURIComponent(workspace.id)}&renovation=${encodeURIComponent(zone.id)}`}>Capture Existing Conditions</a> with photos, plans, sketches or compatible RoomPlan JSON.</li>
           <li>Model and correct Existing Conditions using the editor.</li>
           <li>Create independent options. Open each one to inspect its 2D, elevation and 3D views.</li>
           <li>Export a HOMEFORGE backup before changing browser storage.</li>
         </ol>
       </section>
       <button class="mt-5 text-sm font-semibold text-blue-700 underline" onclick={backup}>Download HOMEFORGE backup</button>
+      <p class="mt-1 text-xs text-slate-600">Editor JSON and project-package exports omit zone capture evidence.</p>
     {/if}
     {#if error}<p role="alert" class="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">{error} <button class="underline" onclick={backup}>Download HOMEFORGE backup</button></p>{/if}
   </div>

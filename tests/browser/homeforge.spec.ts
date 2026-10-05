@@ -27,10 +27,50 @@ test('zone overview opens the exact Existing plan and survives reload', async ({
   await page.getByRole('article', { name: zone.name }).getByRole('link', { name: 'Open zone' }).click();
   await expect(page).toHaveURL(new RegExp(`/zone\\?workspace=${workspace.id}&renovation=${zone.id}`));
   await expect(page.getByRole('heading', { name: zone.name })).toBeVisible();
+  await expect(page.getByText('Editor JSON and project-package exports omit zone capture evidence.')).toBeVisible();
   await page.reload();
   await page.getByRole('link', { name: 'Open Existing Conditions' }).click();
   await expect(page).toHaveURL(new RegExp(`id=${zone.variants[0].projectId}`));
   await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText(zone.name);
+});
+
+for (const width of [1440, 390]) test(`guided capture retains an original photo and exports it at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 }); await page.goto('/');
+  await createWorkspace(page); await createRenovation(page);
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const renovation = workspace.renovationProjects[0];
+  await page.getByRole('article', { name: renovation.name }).getByRole('link', { name: 'Open zone' }).click();
+  await page.getByRole('link', { name: 'Capture Existing Conditions' }).click();
+  await page.getByRole('button', { name: 'Start capture visit' }).click();
+  await page.getByLabel('Capture step').selectOption('overview');
+  const original = await readFile('tests/fixtures/item-photo.png');
+  await page.getByLabel('Photo or import file').setInputFiles({ name: 'item-photo.png', mimeType: 'image/png', buffer: original });
+  await page.getByRole('button', { name: 'Save evidence' }).click();
+  await expect(page.getByText('item-photo.png')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('item-photo.png')).toBeVisible();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download HOMEFORGE backup' }).click();
+  const backup = JSON.parse(await readFile((await (await pending).path())!, 'utf8'));
+  const [asset] = Object.values(backup.evidenceAssets as Record<string, string>);
+  expect(Buffer.from(asset, 'base64')).toEqual(original);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Restore HOMEFORGE backup', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Restore library backup', exact: true });
+  const choose = page.waitForEvent('filechooser');
+  await dialog.getByRole('button', { name: 'Choose backup file', exact: true }).click();
+  await (await choose).setFiles({ name: 'homeforge.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
+  await dialog.getByRole('button', { name: 'Restore as copies', exact: true }).click();
+  await expect(dialog).toContainText('1 HOMEFORGE workspace restored');
+  await dialog.getByRole('button', { name: 'Done', exact: true }).click();
+  const restored = Object.values(await storedRecords(page, 'homeforgeZones')).map(raw => JSON.parse(raw));
+  expect(restored).toHaveLength(2);
+  expect(restored.find(zone => zone.workspaceId !== workspace.id)?.evidence[0].name).toBe('item-photo.png');
+  const anotherDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download HOMEFORGE backup', exact: true }).click();
+  const copiedBackup = JSON.parse(await readFile((await (await anotherDownload).path())!, 'utf8'));
+  expect(Object.values(copiedBackup.evidenceAssets as Record<string, string>).map(encoded => Buffer.from(encoded, 'base64')))
+    .toEqual([original, original]);
 });
 
 test('zone overview does not open missing or unrelated geometry', async ({ page }) => {
