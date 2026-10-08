@@ -2,7 +2,7 @@
 
 ## Request to ChatGPT
 
-Act as my product and architecture planning partner. HOMEFORGE's repository foundation has been set up and repaired by Codex. Help me plan the homeowner application and its next features. Do not assume the proposed HOMEFORGE features already exist. Begin with a short summary of the current foundation, then propose a staged M1/M2 plan and a concrete implementation handoff for Codex. Ask only questions that materially change that plan.
+Act as my product and architecture planning partner. Read HANDOFF.md, M2_5_RESILIENCE.md and this handoff. HOMEFORGE's authorized M1.1–M2.5 foundation is complete: metadata, dashboard, editor context, independent options, safe switching, protected Existing Conditions with explicit correction, backup and recovery. Help me plan the next homeowner UI work for a measured front-entry/stair renovation. Preserve these tested invariants and ask only questions that materially change the plan. Distinguish implemented capabilities from proposed work; do not repeat completed milestones.
 
 ## Project and working arrangement
 
@@ -13,7 +13,7 @@ Act as my product and architecture planning partner. HOMEFORGE's repository foun
 - `upstream`: https://github.com/laanlabs/openPlan3D.git
 - Original upstream commit: `d68cadf703578f2cd3a7c77f820e18d342580c32`; preserved tag: `homeforge-upstream-baseline-2026-10-04`.
 - GitHub Desktop is configured for this checkout and fork, with **For my own purposes** selected.
-- Ready checkpoint: `homeforge-foundation-ready-2026-10-04` on the fork's `main` branch.
+- Foundation tag: `homeforge-foundation-ready-2026-10-04` on the fork's `main` branch. Current development milestones are on `foundation-remediation`; do not start new feature work from the older main snapshot.
 - ChatGPT helps reason and plan; Codex inspects and works on the actual repository; project files preserve durable decisions; Git tracks changes; GitHub preserves and shares the code.
 - Preserve MIT notices, upstream history, existing editor capabilities and unrelated user changes. Push only to the owner's fork.
 
@@ -29,12 +29,12 @@ Success means I can reproduce measured conditions, create an independent propose
 
 The inherited editor already provides local project storage, manual floor-plan editing, numeric properties, walls/openings/furniture, undo/redo, 2D and 3D views, elevation tools, imports and exports, photo-related metadata and compatible RoomPlan file import. These inherited capabilities still need a homeowner workflow and practical evaluation.
 
-The HOMEFORGE dashboard, Existing/Option A/Option B model, protected baseline, and dimension-level verification workflow have **not** been implemented. Setup remediation repairs existing behaviour and tooling only.
+HOMEFORGE now has workspace/renovation/variant metadata referencing upstream project IDs, a dashboard for Existing Conditions and active options, portable backup/restore, reference-safe deletion, editor identity, complete option creation and safe save/load/reset switching. Baseline protection/correction, safe option removal and exact-byte unreadable metadata archival are implemented. Dimension-level provenance remains future work. See M2_4_BASELINE_PROTECTION.md, M2_5_RESILIENCE.md and HANDOFF.md for verified behavior and evidence.
 
 ## Architecture decisions to preserve
 
 - Stack: SvelteKit, Svelte 5, TypeScript, Canvas 2D, Three.js, IndexedDB; Node 24 tooling and adapter-node production build.
-- Preserve and wrap the upstream `Project → Floor` model. Proposed wrapper: `HomeWorkspace → RenovationProject → DesignVariant → upstream Project`.
+- Preserve and wrap the upstream `Project → Floor` model. Implemented wrapper: `HomeWorkspace → RenovationProject → DesignVariant → upstream Project ID`. Wrapper schema 1 and additive IndexedDB version 2 remain current. Wrappers never embed complete upstream projects.
 - Keep references to spaces in the wrapper; postpone cross-project shared geometry.
 - Alternatives must be independent deep copies, including project-owned assets. Ordinary option edits must never change Existing or another option.
 - Protect Existing from accidental edits. Intentional baseline correction needs an explicit action.
@@ -80,12 +80,23 @@ Exclude Python, AI features, native capture development, automatic photo reconst
 
 ## What I want next
 
-Recommend the smallest coherent M1/M2 slice that makes the measured front-entry project useful. Distinguish existing capability, proposed work, open decisions and later ideas. Provide:
+Recommend the smallest coherent next homeowner UI slice that makes the measured front-entry project useful. M1.1–M2.5 are complete; plan from this foundation. Distinguish existing capability, proposed work, open decisions and later ideas. Provide:
 
 1. A plain-language user workflow and information hierarchy.
-2. A proposed wrapper schema, asset ownership rules and migration/persistence strategy.
-3. Exact independence, baseline-protection, switching, backup and recovery acceptance criteria.
+2. UI/navigation decisions that fit the existing wrapper schema and complete-copy asset ownership; identify any justified migration explicitly.
+3. Acceptance criteria for the proposed UI, retaining tested independence, baseline protection, switching, backup and recovery.
 4. A prioritized implementation sequence with clear boundaries and meaningful tests.
 5. A concise Codex prompt naming the first implementation slice, the files to inspect, the acceptance criteria and what remains out of scope.
 
 Use `PROJECT_CHARTER.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `HANDOFF.md` and `FOUNDATION_READY.md` as the durable project references. Read the live repository before asserting details beyond this handoff. Planning does not itself authorize publishing, enabling cloud services or implementing every proposed feature.
+
+
+## Current development handoff
+
+Existing Conditions opens protected, including inherited standalone access to referenced baselines. Begin correction explicitly grants session-only editing; Finish corrections saves successfully before protecting again. Failed writes retain edits. Options are independent complete project copies with assets, thumbnails and remapped valid history. Switching saves current edits, validates the exact target and resets editor context.
+
+Removing an option removes its relationship only, retains its saved project/assets/history, and restores the active pointer to Existing if necessary. A source option cannot be removed before its descendants. Existing cannot be removed individually. Permanent project deletion uses the inherited explicit confirmation and an atomic reference check. Unreadable wrappers block destructive writes until the user explicitly archives their exact bytes; archives are exported by HOMEFORGE backup and never silently repaired or activated.
+
+Deliberate adoption can share one upstream project among renovations. Correction affects every reference to that project; independent options do not share it. Future controls must use shared project mutations and transaction guards, rather than mutating nested store objects directly. Keep view-only floor navigation separate from edits.
+
+Completed milestone evidence and source mapping are recorded in MILESTONE_AUDIT.md. No new dependencies or services were needed. The inherited external-service inventory and deliberate offline review remain release planning work. These tests establish this milestone's acceptance criteria, not universal correctness or a finished homeowner product.

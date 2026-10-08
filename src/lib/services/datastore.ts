@@ -1,6 +1,9 @@
 import { readProject } from '$lib/utils/projectValidation';
 import type { Project } from '$lib/models/types';
-import { withDatabase, transaction, request, records, readRecord, libraryBackup, notifyLibraryChange } from './localDatabase';
+import { withDatabase, transaction, request, records, readRecord, libraryBackup, homeforgeBackup, notifyLibraryChange } from './localDatabase';
+import { assertProjectUnreferenced, assertBaselineWritable } from './homeforgeReferences';
+import { get } from 'svelte/store';
+import { baselineProtection } from '$lib/stores/baselineProtection';
 export { PROJECTS_STORAGE_KEY, LIBRARY_CHANGE_KEY } from './localDatabase';
 
 export interface DataStore {
@@ -47,11 +50,18 @@ export function storageErrorMessage(error: unknown): string {
 
 /** Preserve the original bytes, including a damaged library, for manual recovery. */
 export async function downloadLibraryBackup() {
-  const raw = await libraryBackup();
+  downloadBackup(await libraryBackup(), 'openplan3d-library-backup.json');
+}
+
+export async function downloadHomeforgeBackup() {
+  downloadBackup(await homeforgeBackup(), 'homeforge-library-backup.json');
+}
+
+function downloadBackup(raw: string, filename: string) {
   const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'openplan3d-library-backup.json';
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -71,12 +81,14 @@ export function createLocalStore(): DataStore {
 
     async save(project) {
       const id = project.id, raw = JSON.stringify(project), generation = generations.get(id);
+      const correction = get(baselineProtection);
       await mutateLibrary(async () => {
-        await withDatabase(db => transaction(db, ['projects'], 'readwrite', async tx => {
+        await withDatabase(db => transaction(db, ['projects', 'homeforgeWorkspaces'], 'readwrite', async tx => {
           const projects = tx.objectStore('projects');
           const stored = (await request(projects.get(id))) ?? null;
           if (generation !== generations.get(id)) throw new ProjectConflictError();
           check(id, stored);
+          await assertBaselineWritable(tx, id, () => correction === get(baselineProtection) && correction.projectId === id && correction.correcting);
           projects.put(raw, id);
         }));
         // A successful request alone is not a committed transaction.
@@ -136,10 +148,11 @@ export function createLocalStore(): DataStore {
 
     async delete(id) {
       await mutateLibrary(async () => {
-        await withDatabase(db => transaction(db, ['projects', 'thumbnails', 'history'], 'readwrite', async tx => {
+        await withDatabase(db => transaction(db, ['projects', 'thumbnails', 'history', 'homeforgeWorkspaces'], 'readwrite', async tx => {
           const projects = tx.objectStore('projects');
           const expected = listed.has(id) ? listed.get(id) : opened.get(id);
           if (((await request(projects.get(id))) ?? null) !== (expected ?? null)) throw new ProjectConflictError();
+          await assertProjectUnreferenced(tx, id);
           projects.delete(id);
           tx.objectStore('thumbnails').delete(id);
           tx.objectStore('history').delete(id);

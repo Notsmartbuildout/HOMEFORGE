@@ -1,0 +1,13 @@
+
+ RUN  v5.0.0 C:/DEVELOPMENT/HOMEFORGE
+
+
+ Test Files  5 passed (5)
+      Tests  93 passed (93)
+   Start at  21:05:25
+   Duration  1.20s (transform 57%, import 19%, tests 13%, setup 10%, worker 1%)
+
+  Transform  transforming modules took 2.54s · 57% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

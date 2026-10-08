@@ -73,6 +73,7 @@
 
     <div class="space-y-4 overflow-y-auto px-5 py-4">
       {#if result}
+        {#if result.workspaces}<p role="status" class="text-sm font-semibold">{result.workspaces.length} HOMEFORGE workspace{result.workspaces.length === 1 ? '' : 's'} restored.</p>{/if}
         <div role="status" class="rounded-lg bg-green-50 p-4 text-sm text-green-900">
           <p class="font-semibold">{result.projects.length ? $t(result.projects.length === 1 ? 'restore.savedOne' : 'restore.savedMany', { count: result.projects.length }) : $t('restore.saved')}</p>
           {#if result.recoveryArchives}<p class="mt-1">{$t('restore.archiveHelp')}</p>{/if}
@@ -86,6 +87,7 @@
         </div>
         {#if reading}<p role="status" class="text-sm text-gray-500">{$t('restore.reading')}</p>{/if}
         {#if preview}
+          {#if preview.workspaceCount !== undefined}<p class="text-sm font-semibold">{preview.workspaceCount} HOMEFORGE workspace{preview.workspaceCount === 1 ? '' : 's'} ready to restore.</p>{/if}
           <p class="text-sm font-semibold">{$t(preview.projectCount === 1 ? 'restore.readyOne' : 'restore.readyMany', { count: preview.projectCount })}</p>
           {#if preview.warnings.length}
             <div class="space-y-1 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
@@ -101,7 +103,7 @@
               </li>
             {/each}
           </ul>
-          {#if !preview.entries.length && !preview.recoveryArchives}<p class="text-sm text-gray-500">{$t('restore.empty')}</p>{/if}
+          {#if !preview.entries.length && !preview.workspaceCount && !preview.recoveryArchives}<p class="text-sm text-gray-500">{$t('restore.empty')}</p>{/if}
         {/if}
       {/if}
       {#if error}<p role="alert" class="rounded-lg bg-red-50 p-3 text-sm text-red-900">{projectServiceMessage(error, $locale)}</p>{/if}
@@ -111,9 +113,9 @@
     <div class="flex flex-wrap justify-end gap-3 border-t border-gray-100 px-5 py-4">
       <button onclick={onclose} disabled={restoring} class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40">{result ? $t('transfer.done') : $t('transfer.cancel')}</button>
       {#if !result}
-        <button onclick={restore} disabled={reading || restoring || !preview || (!preview.projectCount && !preview.recoveryArchives)}
+        <button onclick={restore} disabled={reading || restoring || !preview || (!preview.projectCount && !preview.workspaceCount && !preview.recoveryArchives)}
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40">
-          {restoring ? $t('restore.busy') : preview && !preview.projectCount && preview.recoveryArchives ? $t('restore.keep') : $t('restore.confirm')}
+          {restoring ? $t('restore.busy') : preview && !preview.projectCount && !preview.workspaceCount && preview.recoveryArchives ? $t('restore.keep') : $t('restore.confirm')}
         </button>
       {/if}
     </div>

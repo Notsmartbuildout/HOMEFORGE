@@ -1,10 +1,19 @@
 # Handoff
 
-Owner: Jesse Lawson (`jessenlawson-cell`). Date: 2026-10-04. Final Git repository and application: `C:\DEVELOPMENT\HOMEFORGE`.
+Owner: Jesse Lawson (`jessenlawson-cell`). Updated: 2026-10-05. Final Git repository and application: `C:\DEVELOPMENT\HOMEFORGE`.
 
 ## Current state
 
-The authorized Windows setup and remediation of known foundation errors are complete. The repository is ready for future development strategy. No HOMEFORGE homeowner features have been implemented.
+The authorized Windows setup, known-error remediation and M1.1–M2.5 development sequence are complete. Every milestone is committed on `foundation-remediation` and pushed to the owner's fork. M2.4 checkpoint: `bbd01528ea88a90b0b844241fb6f692c9618aa7e`. This M2.5 checkpoint completes safe option removal, exact-byte damaged-metadata archival and the resilience audit. Hosted deployment remains out of scope.
+
+M3.1 added a Renovation Zone overview around the existing `RenovationProject`, with exact Existing/option opening, recovery messages and a save-before-return editor link. No schema or database migration was made. The inherited numeric wall/opening/stair controls and direct manipulation were reused. Gates for this slice: 1,260 unit tests, zero type-check errors/warnings, production build and 18 relevant browser cases across Chromium, Firefox and WebKit passed. `M3_M6_DESIGN.md` and `M3_M6_IMPLEMENTATION_PLAN.md` hold the working design and execution sequence.
+
+M4 capture and backup/restore added IndexedDB v3 zone/evidence stores, a guided capture route, original file SHA-256 records, and HOMEFORGE backup v2 with v1 restore compatibility. Restore copies zone and asset records with remapped ownership IDs; confirmed feature bindings copy with new options. The earlier capture checkpoint passed 1,273 unit tests in 133 files, zero type-check errors/warnings, production build, and 21 browser cases across Chromium, Firefox and WebKit. The browser gate included original-file capture, export and restore at desktop and phone widths.
+
+M4 is complete at checkpoint `4f41a33`. It adds persisted feature labels/relations, reviewed binding of older options, per-feature measurements, coverage prompts and a user-declared sufficient state, relevant-geometry verification, calculated nominal stair riser height, an editor legend, evidence links, derived image previews, and RoomPlan draft review. Removing an option also removes its bindings atomically. Restore keeps a zone with an unmatched floor/element binding in recovery; existing projects and workspace metadata remain available. RoomPlan review does not replace Existing Conditions. Verification shows the saved geometry value and whether it differs from the observation; it is not an engineering guarantee. Final October 5 gates on the committed code: 1,282 unit tests in 134 files, `npm run check` with zero errors/warnings, production build, and nine relevant browser cases across Chromium, Firefox and WebKit. The owner requested fewer repeated tests, so broader browser suites were not rerun.
+
+Read [MILESTONE_AUDIT.md](MILESTONE_AUDIT.md), [M2_5_RESILIENCE.md](M2_5_RESILIENCE.md) and [M2_4_BASELINE_PROTECTION.md](M2_4_BASELINE_PROTECTION.md) for earlier APIs, invariants and evidence. Prior M2.5 gates: 1,260 unit tests in 132 files, 60 browser cases across three engines, zero type-check errors/warnings, production build passed. Logs are retained in EVIDENCE; M0 evidence below remains historical. The original `main` snapshot is older; use `foundation-remediation` for subsequent development.
+
 
 - Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
 - `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
@@ -39,4 +48,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-Copy [CHATGPT_PLANNING_HANDOFF.md](CHATGPT_PLANNING_HANDOFF.md) into ChatGPT for planning, augmentation and a scoped Codex implementation prompt. Preserve accepted decisions in [PROJECT_CHARTER.md](PROJECT_CHARTER.md) and [ARCHITECTURE.md](ARCHITECTURE.md). M1/M2 homeowner navigation, independent variants and measurement verification remain planned; feature implementation requires its own task. Push only to the user's fork.
+Continue from [M3_M6_DESIGN.md](M3_M6_DESIGN.md) and [M3_M6_IMPLEMENTATION_PLAN.md](M3_M6_IMPLEMENTATION_PLAN.md). M1.1–M2.5, M3.1 and M4 are complete; do not repeat them. Start M5 with proposal review and deterministic numeric legend commands. Keep the owner's reduced-testing preference: run focused checks during development and one broad gate at a milestone boundary. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes.
+
+Future controls must use shared mutation/write guards. Deliberate adoption can share a baseline ID across renovations; correction affects all those references. Measurement provenance, native capture, AI, structural/code calculations and deployment remain future decisions. This verified foundation is ready for further UI development; universal bug-free or fully offline behavior has not been claimed.

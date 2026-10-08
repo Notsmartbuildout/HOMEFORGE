@@ -1,0 +1,8 @@
+
+> open3dfloorplan@0.9.0 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\DEVELOPMENT\HOMEFORGE
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings

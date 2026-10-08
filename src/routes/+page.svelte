@@ -13,6 +13,7 @@
   import LibraryRestoreDialog from '$lib/components/LibraryRestoreDialog.svelte';
   import ProjectPackageDialog from '$lib/components/ProjectPackageDialog.svelte';
   import ProjectActionsMenu from '$lib/components/ProjectActionsMenu.svelte';
+  import HomeforgeDashboard from '$lib/components/HomeforgeDashboard.svelte';
   import { houseTemplates } from '$lib/utils/houseTemplates';
 
   const openingLifetime = new AbortController();
@@ -33,6 +34,7 @@
   let showTemplateModal = $state(false);
 
   let libraryError = $state<string | null>(null);
+  let homeforgeRevision = $state(0);
 
   async function withLibraryError(action: () => Promise<void>) {
     try { await action(); libraryError = null; }
@@ -50,10 +52,15 @@
       projects = await localStore.list();
       projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       thumbnails = await localStore.getThumbnails();
+      homeforgeRevision++;
     } finally { loading = false; }
   }
 
   function openRestore() { showWelcome = false; restoreOpen = true; }
+  async function startHomeforge() {
+    showWelcome = false;
+    await tick(); document.getElementById('homeforge-new-workspace')?.focus();
+  }
   function openPackage() { showWelcome = false; packageOpen = true; }
   async function afterRestore() {
     await refreshProjects();
@@ -146,7 +153,7 @@
 </script>
 
 {#if showWelcome}
-  <WelcomeScreen onRestoreLibrary={openRestore} onImportPackage={openPackage} onDismiss={() => { showWelcome = false; void withLibraryError(refreshProjects); }} />
+  <WelcomeScreen onRestoreLibrary={openRestore} onImportPackage={openPackage} onHomeforgeStart={() => { void startHomeforge(); }} onDismiss={() => { showWelcome = false; void withLibraryError(refreshProjects); }} />
 {/if}
 
 {#if restoreOpen}<LibraryRestoreDialog onclose={() => restoreOpen = false} onrestored={afterRestore} />{/if}
@@ -181,6 +188,8 @@
   </div>
 
   <div class="max-w-5xl mx-auto px-6 py-8">
+    <HomeforgeDashboard {projects} revision={homeforgeRevision} onchanged={refreshProjects} onrestore={openRestore} />
+    <h2 class="mb-4 text-xl font-semibold text-gray-800">Editor project library</h2>
     {#if duplicating}<p role="status" class="mb-4 text-sm text-gray-500">{$t('library.duplicating')}</p>{/if}
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
       <p>{$t('library.local')}</p>

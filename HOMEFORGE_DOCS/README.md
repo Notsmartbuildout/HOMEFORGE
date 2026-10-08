@@ -30,4 +30,4 @@ The full validation sequence above is available for future changes; repeating it
 
 Copy LOCAL_ENV.example to root .env only if .env does not already exist. It disables inherited analytics, handoff uploads and assistant sharing.
 
-The repository is a baseline: homeowner navigation, variants and verification UI are not implemented yet.
+M1.1–M2.5 homeowner metadata, dashboard, options, protection and recovery are complete on `foundation-remediation`. The proposed next phase is in [M3_M6_DESIGN.md](M3_M6_DESIGN.md) and [M3_M6_IMPLEMENTATION_PLAN.md](M3_M6_IMPLEMENTATION_PLAN.md); those documents distinguish planned work from implemented checkpoints.
