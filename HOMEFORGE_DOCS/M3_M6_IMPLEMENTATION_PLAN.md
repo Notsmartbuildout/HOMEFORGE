@@ -56,9 +56,7 @@
 
 **Interface:** The inherited property panel already edits wall length/thickness/heights, opening dimensions and stair width/depth/riser count, and the canvas already supports dragging. Keep those shared APIs. Check the front-entry task on desktop and mobile; if a common field is hidden or difficult to reach, expose that existing field near the selected feature without duplicating mutation logic. Do not create a second geometry editor.
 
-- [ ] Record the concrete interaction gap with a failing browser case for a wall, door or stair and Existing read-only mode.
-- [ ] Make the smallest panel/layout change that resolves that case through the existing mutation function.
-- [ ] Verify undo, option independence and protection with focused tests; run type check and build; commit. If no gap is found, record the finding and skip code.
+- [x] The sample pilot and 390 px browser case found the existing stair width control reachable through Layers in Chromium, Firefox and WebKit. Existing protection and independent option editing passed. No duplicate numeric control was needed; see `FRONT_ENTRY_STAIR_PILOT.md`.
 
 M3.1 inspection found the inherited property panel already exposes wall length/thickness/heights, door/window dimensions and stair width/depth/riser count through guarded mutations, with direct canvas manipulation. No duplicate numeric controls are added without a concrete front-entry pilot gap. This task remains open for that pilot.
 
@@ -123,7 +121,7 @@ M4 storage and backup v2 passed the earlier byte-exact browser restore gate. The
 
 **Interface:** A proposal lists source evidence, exact feature/property changes and before/after values. Local generators may use calibrated plans, RoomPlan and manual dimensions. Proposal creation does not write Existing. Acceptance requires current revisions and explicit correction mode, uses existing mutations/save and one undo group; reject/cancel makes no change. Photo-only proposals cannot assert metric dimensions.
 
-- [ ] Test cancel, stale target, quota, protected baseline, accepted undo and source traceability; implement and verify; commit.
+- [x] Test cancel, stale target, quota, protected baseline, accepted undo and source traceability; implement and verify; commit.
 
 ### Task 2: Deterministic legend commands
 
@@ -131,7 +129,9 @@ M4 storage and backup v2 passed the earlier byte-exact browser restore gate. The
 
 **Interface:** Parse only exact numeric assignment grammar with a unique legend label and supported property/unit. Resolve to feature ID and variant binding, then call the same guarded numeric mutation. Ambiguous/unsupported text leaves geometry unchanged and returns a specific clarification. Multi-element commands require a computed preview and acceptance; add only commands for which that preview is deterministic. No provider call or code execution.
 
-- [ ] Test unique/ambiguous labels, units, unsupported structural text, protection and undo; implement minimal grammar; verify; commit.
+- [x] Test unique/ambiguous labels, units, unsupported structural text, protection and undo; implement minimal grammar; verify; commit.
+
+M5 landed in `9668139`; the option-transition input fix and October 8 gate are recorded in `HANDOFF.md`. Final gate: 1,287 unit tests, zero type-check diagnostics, production build and six relevant browser cases across Chromium/Firefox/WebKit.
 
 ## M6 — front-entry/stair pilot and export
 
@@ -139,15 +139,15 @@ M4 storage and backup v2 passed the earlier byte-exact browser restore gate. The
 
 **Files:** Add a zone comparison surface using existing 2D/elevation/3D views and current export paths; update export to include measurement value, unit, source, date and current/stale status; test focused unit/browser cases.
 
-- [ ] Test same-feature Existing/Option comparison, removed/replaced/unbound cases, provenance display, stale status and backup/export scope wording.
-- [ ] Implement the smallest useful comparison and export; verify type check, unit tests, build and relevant browser cases; commit.
+- [x] Test same-feature Existing/Option comparison, removed/replaced/unbound cases, provenance display, stale status and backup/export scope wording.
+- [x] Implement saved feature/dimension comparison and CSV export; verify type check, unit tests, build and relevant browser cases; commit.
 
 ### Task 2: Real pilot and release audit
 
 **Files:** Add a non-sensitive front-entry/stair fixture or manual pilot checklist in `HOMEFORGE_DOCS`; update `ROADMAP.md`, `ARCHITECTURE.md`, `HANDOFF.md` and milestone audit only with verified outcomes.
 
-- [ ] Capture context and focus, verify stair/opening dimensions, create two options, compare 2D/elevation/3D, export, restore and check protected corrections in the pilot.
-- [ ] Run the relevant regression gates and deliberate offline/external-service review. Record exact passes, failures and limitations; commit/push reviewed checkpoints to the owner's fork only.
+- [x] Run a non-sensitive software sample with context/focus capture, stair/opening dimensions, two options, 2D/elevation/3D inspection, CSV/backup export and restore, and protected correction checks. The owner's real measurements begin after the software gate, per October 8 clarification.
+- [x] Run the relevant regression gates and deliberate offline/external-service review; record exact passes and limitations in `FRONT_ENTRY_STAIR_PILOT.md`, `HANDOFF.md` and `MILESTONE_AUDIT.md`. Publication is separate because current `origin` differs from the historical owner fork.
 
 ## Execution order
 

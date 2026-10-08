@@ -1,4 +1,4 @@
-# Completed milestone audit — 2026-10-04
+# Milestone audit — updated 2026-10-08
 
 Repository/application: C:\DEVELOPMENT\HOMEFORGE. Owner fork: jessenlawson-cell/HOMEFORGE. Development branch: foundation-remediation. MIT notices and original upstream history remain intact; no deployment or cloud services added.
 
@@ -19,6 +19,20 @@ Parallel work was limited to separate service/test ownership and independent rea
 
 Git publication check: all listed commits are ancestors of the pushed development branch; origin is the owner's fork, upstream remains laanlabs/openPlan3D. Before reporting completion Codex compares the final local HEAD with `git ls-remote origin refs/heads/foundation-remediation` and verifies a clean checkout. This document's own commit is the M2.5 checkpoint; identify it with `git log --diff-filter=A -- HOMEFORGE_DOCS/M2_5_RESILIENCE.md`.
 
-The next task is homeowner UI planning using CHATGPT_PLANNING_HANDOFF.md. M3/M4 and later ideas are not implemented by this objective. Shared adoption ownership, mutation guard use, retained-geometry removal and deliberate offline review are the planning constraints recorded in M2_5_RESILIENCE.md.
+The table and gate above are the historical M1–M2.5 audit. M3–M6 proceeded under M3_M6_DESIGN.md and M3_M6_IMPLEMENTATION_PLAN.md; their current evidence follows.
 
 Browser evidence is split intentionally: EVIDENCE/M2_5_BROWSER.log proves 57 cases, and EVIDENCE/M2_5_PENDING_BROWSER.log proves three additional cross-tab adoption/export cases. Existing assertions remain intact; the added test uses canonical door orientation so legacy default revival does not change its fixture shape.
+
+## M3–M6 software gate
+
+| Milestone | Evidence | Status |
+|---|---|---|
+| M3.1 | `67cf2b9`; 1,260 unit tests, type check, build, 18 browser cases across three engines | Complete |
+| M3 numeric gap | October 8 sample and 390 px stair control case across three engines: inherited width control reachable; protected Existing and independent option edit verified | Closed without duplicate controls |
+| M4 | `4f41a33` and `abb9595`; 1,282 unit tests, type check, build, nine browser cases across three engines; byte-exact original evidence backup/restore | Complete |
+| M5 | `9668139` plus local `e33ce6d` transition fix; 1,287 unit tests, type check, build, six proposal/RoomPlan cases across three engines | Complete |
+| M6 | Saved feature/dimension comparison, CSV provenance, sample front-entry/stair workflow, 390 px control, normal-use external-request audit; 1,288 unit tests in 137 files, zero type-check diagnostics, production build and nine focused browser cases across Chromium/Firefox/WebKit | Software gate passed; publication pending |
+
+The M6 sample uses fictional dimensions and images from test fixtures. It proves the software path for beginning a real project; it does not claim that Jesse's home has been measured. The sample makes no external HTTP requests. Analytics is opt-in, and inherited optional Firebase capture-code import, AI rendering and assistant-sharing actions remain outside this local workflow. CSV omits original evidence and full plans; HOMEFORGE backup includes them. See FRONT_ENTRY_STAIR_PILOT.md.
+
+Current `origin` is `Notsmartbuildout/HOMEFORGE`, not the historical `jessenlawson-cell/HOMEFORGE` named by this audit. The old `foundation-remediation` remote branch is gone, and `9668139` is already in `origin/main`. Do not infer publication of later local commits from the historic push check; verify the target owner and branch before pushing.

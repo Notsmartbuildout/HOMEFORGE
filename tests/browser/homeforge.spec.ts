@@ -185,6 +185,129 @@ test('manual dimension proposal previews, cancels and saves only in correction m
   await expect(optionReview).not.toBeVisible();
   await expect.poll(async () => (await savedProjects(page))[option.projectId].floors[0].doors[0].width).toBe(101.6);
   expect((await savedProjects(page))[source.id].floors[0].doors[0].width).toBe(91.44);
+  await page.getByRole('button', { name: 'Back to zone' }).click();
+  const comparison = page.getByRole('region', { name: 'Compare and export' });
+  await expect(comparison).toContainText('D1 · door.width');
+  await expect(comparison).toContainText('101.60');
+  const download = page.waitForEvent('download');
+  await comparison.getByRole('button', { name: 'Download dimension comparison CSV' }).click();
+  const csv = await readFile((await (await download).path())!, 'utf8');
+  expect(csv).toContain('"D1","","door.width","36","in","manually measured"');
+  expect(csv).toContain('"91.44","bound","101.6","bound"');
+});
+
+test('sample front entry and stair workflow compares two options and restores capture', async ({ page }) => {
+  test.setTimeout(120_000);
+  const externalRequests: string[] = [];
+  page.on('request', request => {
+    if (request.url().startsWith('http') && new URL(request.url()).hostname !== '127.0.0.1') externalRequests.push(request.url());
+  });
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  source.floors[0].stairs.push({ id: 'qa-stair', position: { x: 120, y: 120 }, rotation: 0, width: 100,
+    depth: 300, riserCount: 14, direction: 'up', stairType: 'straight' });
+  await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Sample front entry and stairs', source.id);
+  await page.getByRole('article', { name: 'Sample front entry and stairs' }).getByRole('link', { name: 'Open zone' }).click();
+  for (const [element, label] of [['Ground Floor / door 1', 'D1'], ['Ground Floor / stair 1', 'S1']]) {
+    await page.getByLabel('Existing element').selectOption({ label: element });
+    await page.getByLabel('Feature label').fill(label);
+    await page.getByRole('button', { name: 'Save feature' }).click();
+    await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText(label);
+  }
+  for (const [feature, property, value] of [['D1', 'door.width', '90.5'], ['S1', 'stair.width', '100'], ['S1', 'stair.totalRise', '280']]) {
+    await page.getByRole('combobox', { name: 'Feature', exact: true }).selectOption({ label: feature });
+    await page.getByLabel('Measurement property').selectOption(property);
+    await page.getByLabel('Measured value').fill(value);
+    await page.getByRole('button', { name: 'Save measurement' }).click();
+    await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText(`${property}: ${value} cm`);
+  }
+  await page.getByRole('list', { name: 'Feature legend' }).getByRole('button', { name: 'Verify against Existing' }).first().click();
+  await expect(page.getByRole('list', { name: 'Feature legend' })).toContainText('current');
+  await page.getByRole('link', { name: 'Capture Existing Conditions' }).click();
+  await page.getByRole('button', { name: 'Start capture visit' }).click();
+  const photo = await readFile('tests/fixtures/item-photo.png');
+  for (const [category, scope, name] of [['overview', 'context', 'entry-overview.png'], ['opening', 'focus', 'stair-detail.png']]) {
+    await page.getByLabel('Capture step').selectOption(category);
+    await page.getByLabel('Area').selectOption(scope);
+    await page.getByLabel('Photo or import file').setInputFiles({ name, mimeType: 'image/png', buffer: photo });
+    await page.getByRole('button', { name: 'Save evidence' }).click();
+    await expect(page.getByRole('region', { name: 'Saved evidence' })).toContainText(name);
+  }
+  await page.getByRole('link', { name: 'Zone overview' }).click();
+  for (const optionName of ['Option A', 'Option B']) {
+    await page.getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+    await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Create design option' }).getByRole('button', { name: 'Create option' }).click();
+    await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText(optionName);
+    await page.getByRole('button', { name: 'Back to zone' }).click();
+  }
+  await page.getByRole('link', { name: 'Open Option A' }).click();
+  await page.getByLabel('Exact legend command').fill('S1 is 110 centimeters wide.');
+  await page.getByRole('button', { name: 'Review command' }).click();
+  const proposal = page.getByRole('dialog', { name: 'Review option edit proposal' });
+  await proposal.getByRole('button', { name: 'Accept and save edit' }).click();
+  await expect(proposal).not.toBeVisible();
+  await page.getByRole('button', { name: 'Back to zone' }).click();
+  const comparison = page.getByRole('region', { name: 'Compare and export' });
+  await expect(comparison).toContainText('S1 · stair.width');
+  await expect(comparison).toContainText('Option B saved cm');
+  await expect(comparison.getByRole('row', { name: /S1 · stair.width/ })).toContainText('110.00');
+  const csvDownload = page.waitForEvent('download');
+  await comparison.getByRole('button', { name: 'Download dimension comparison CSV' }).click();
+  const csv = await readFile((await (await csvDownload).path())!, 'utf8');
+  expect(csv).toContain('"S1","","stair.width","100","cm","manually measured"');
+  expect(csv).toContain('"D1","","door.width","90.5","cm","manually measured"');
+  expect(csv).toContain('"100","bound","110","bound","100","bound"');
+  await page.getByRole('link', { name: 'Open Option A' }).click();
+  await expect(page.getByRole('button', { name: '2D', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '3D', exact: true }).click();
+  await expect(page.getByRole('button', { name: '3D', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '2D', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).press('l');
+  await page.getByRole('button', { name: '─ Wall 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Elevation', exact: true }).first().click();
+  await expect(page.getByLabel('Wall elevation editor canvas', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to zone' }).click();
+  const backupDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download HOMEFORGE backup', exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await backupDownload).path())!, 'utf8'));
+  expect(Object.values(backup.evidenceAssets as Record<string, string>).map(value => Buffer.from(value, 'base64')))
+    .toEqual([photo, photo]);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Restore HOMEFORGE backup', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Restore library backup', exact: true });
+  const chooser = page.waitForEvent('filechooser');
+  await dialog.getByRole('button', { name: 'Choose backup file', exact: true }).click();
+  await (await chooser).setFiles({ name: 'sample-homeforge.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
+  await dialog.getByRole('button', { name: 'Restore as copies' }).click();
+  await expect(dialog).toContainText('1 HOMEFORGE workspace restored');
+  expect(externalRequests).toEqual([]);
+});
+
+test('phone stair width stays reachable while Existing remains protected', async ({ page }) => {
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  source.floors[0].stairs.push({ id: 'qa-stair', position: { x: 120, y: 120 }, rotation: 0, width: 100,
+    depth: 300, riserCount: 14, direction: 'up', stairType: 'straight' });
+  await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Phone stairs', source.id);
+  await page.getByRole('article', { name: 'Phone stairs' }).getByRole('link', { name: 'Open Existing Conditions', exact: true }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('button', { name: 'Layers', exact: true }).click();
+  await page.getByRole('button', { name: '🪜 Stair 1' }).click();
+  const width = page.locator('[data-plan-properties]').getByLabel('Width (cm)');
+  await expect(width).toBeVisible();
+  await expect(width).toHaveValue('100');
+  await expect(page.getByRole('region', { name: 'Baseline protection' })).toContainText('Protected');
+  await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Create design option' }).getByRole('button', { name: 'Create option' }).click();
+  await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText('Option A');
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('button', { name: 'Layers', exact: true }).click();
+  await page.getByRole('button', { name: '🪜 Stair 1' }).click();
+  await width.fill('110');
+  await expect.poll(async () => Object.values(await savedProjects(page)).some((project: any) => project.id !== source.id && project.floors[0].stairs[0].width === 110)).toBe(true);
+  expect((await savedProjects(page))[source.id].floors[0].stairs[0].width).toBe(100);
 });
 
 test('zone overview does not open missing or unrelated geometry', async ({ page }) => {

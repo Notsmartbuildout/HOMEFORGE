@@ -8,6 +8,7 @@
   import { createHomeforgeZoneStore } from '$lib/services/homeforgeZone';
   import { createLocalStore, downloadHomeforgeBackup, storageErrorMessage } from '$lib/services/datastore';
   import { coveragePrompts, geometryValue, measurementStatus } from '$lib/utils/homeforgeCoverage';
+  import { compareZone, comparisonCsv } from '$lib/utils/homeforgeComparison';
 
   function editorElements(project: Project | null) {
     return project?.floors.flatMap((floor, floorIndex) => {
@@ -38,6 +39,7 @@
   let loading = $state(true);
   let error = $state('');
   let capture = $state<HomeforgeZone | null>(null), existingProject = $state<Project | null>(null);
+  let comparisonProjects = $state<Record<string, Project | null>>({});
   let elementKey = $state(''), featureLabel = $state(''), measurementFeatureId = $state('');
   let measurementProperty = $state('wall.length'), measuredValue = $state<number | undefined>(undefined);
   let measurementUnit = $state<ZoneMeasurement['unit']>('cm'), saving = $state(false);
@@ -50,6 +52,7 @@
   const elements = $derived(editorElements(existingProject));
   const prompts = $derived(capture ? coveragePrompts(capture) : []);
   const reviewElements = $derived(editorElements(reviewProject));
+  const comparison = $derived(capture && zone ? compareZone(capture, zone, comparisonProjects) : null);
 
   onMount(() => {
     let alive = true;
@@ -68,7 +71,12 @@
           project = await projectStore.load(existing.projectId);
           saved = await zoneStore.ensure(workspaceId, renovationId);
         }
-        if (alive) { workspace = found; zone = renovation; status = data.projectStatus; capture = saved; existingProject = project; }
+        const projects: Record<string, Project | null> = {};
+        await Promise.all(renovation.variants.map(async variant => {
+          try { projects[variant.projectId] = variant.id === renovation.existingVariantId ? project : await projectStore.load(variant.projectId); }
+          catch { projects[variant.projectId] = null; }
+        }));
+        if (alive) { workspace = found; zone = renovation; status = data.projectStatus; capture = saved; existingProject = project; comparisonProjects = projects; }
       } catch (reason) { if (alive) error = storageErrorMessage(reason); }
       finally { if (alive) loading = false; }
     })();
@@ -79,6 +87,13 @@
   async function backup() {
     try { await downloadHomeforgeBackup(); error = ''; }
     catch (reason) { error = storageErrorMessage(reason); }
+  }
+  function downloadComparison() {
+    if (!zone || !comparison) return;
+    const url = URL.createObjectURL(new Blob([comparisonCsv(zone.name, comparison)], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url; link.download = `${zone.name.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}-dimensions.csv`;
+    link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function saveFeature() {
     const element = elements.find(item => item.key === elementKey);
@@ -300,6 +315,28 @@
               {/if}
             </div>
           {/if}
+        </section>
+      {/if}
+      {#if comparison}
+        <section class="mt-4 rounded-xl border bg-white p-5" aria-label="Compare and export">
+          <h2 class="text-lg font-semibold">Compare saved designs</h2>
+          <p class="mt-1 text-sm text-slate-600">Compare feature identities and dimensions below. Use the plan links above to inspect 2D, elevation and 3D views. Option dimensions are design values, not physically verified measurements. Calculated observations do not imply a saved geometry value.</p>
+          <div class="mt-4 overflow-x-auto">
+            <table class="min-w-full border-collapse text-left text-sm">
+              <caption class="mb-2 text-left font-semibold">Feature matches</caption>
+              <thead><tr><th class="border p-2">Feature</th><th class="border p-2">Relationship</th>{#each comparison.variants as variant}<th class="border p-2">{variant.name}</th>{/each}</tr></thead>
+              <tbody>{#each comparison.features as feature}<tr><th class="border p-2 font-medium">{feature.label} · {feature.kind}</th><td class="border p-2">{feature.relations || '—'}</td>{#each feature.states as state}<td class="border p-2">{state}</td>{/each}</tr>{/each}</tbody>
+            </table>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table class="min-w-full border-collapse text-left text-sm">
+              <caption class="mb-2 text-left font-semibold">Dimensions and sources</caption>
+              <thead><tr><th class="border p-2">Feature and property</th><th class="border p-2">Observation</th><th class="border p-2">Source and status</th>{#each comparison.variants as variant}<th class="border p-2">{variant.name} saved cm</th>{/each}</tr></thead>
+              <tbody>{#each comparison.dimensions as dimension}<tr><th class="border p-2 font-medium">{dimension.feature} · {dimension.property}</th><td class="border p-2">{dimension.observed} {dimension.unit}</td><td class="border p-2">{dimension.source} · {dimension.recordedAt} · {dimension.status}{#if dimension.evidence}<br />{dimension.evidence}{/if}</td>{#each dimension.values as value}<td class="border p-2">{value === null ? '—' : value.toFixed(2)}</td>{/each}</tr>{/each}</tbody>
+            </table>
+          </div>
+          <button class="mt-4 font-semibold text-blue-700 underline disabled:opacity-50" disabled={!comparison.dimensions.length} onclick={downloadComparison}>Download dimension comparison CSV</button>
+          <p class="mt-1 text-xs text-slate-600">CSV contains saved dimensions and provenance, not original evidence files or complete plans. Use HOMEFORGE backup for those.</p>
         </section>
       {/if}
       <section class="mt-4 rounded-xl border bg-white p-5" aria-label="Renovation workflow">
