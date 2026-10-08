@@ -19,6 +19,17 @@
   let draft = $state<Project | null>(null), reviewedEvidenceId = $state('');
   let selectedFeatureId = $state(''), selectedEvidenceId = $state('');
   let previewUrl = $state(''), previewName = $state('');
+  let existingVariantId = $state(''), draftDimensionKey = $state(''), draftFeatureId = $state('');
+  const draftDimensions = $derived(draft?.floors.flatMap(floor => [
+    ...floor.doors.flatMap((door, index) => ([
+      { key: JSON.stringify([floor.id, door.id, 'door.width']), kind: 'door', property: 'door.width', valueCm: door.width, name: `${floor.name} / door ${index + 1} width` },
+      { key: JSON.stringify([floor.id, door.id, 'door.height']), kind: 'door', property: 'door.height', valueCm: door.height, name: `${floor.name} / door ${index + 1} height` }
+    ])),
+    ...floor.windows.flatMap((window, index) => ([
+      { key: JSON.stringify([floor.id, window.id, 'window.width']), kind: 'window', property: 'window.width', valueCm: window.width, name: `${floor.name} / window ${index + 1} width` },
+      { key: JSON.stringify([floor.id, window.id, 'window.height']), kind: 'window', property: 'window.height', valueCm: window.height, name: `${floor.name} / window ${index + 1} height` }
+    ]))
+  ]) ?? []);
 
   onMount(() => {
     let alive = true;
@@ -31,7 +42,7 @@
         const renovation = dashboard.workspaces.find(item => item.id === w)?.renovationProjects.find(item => item.id === r);
         if (!renovation) throw new Error('Renovation zone is unavailable. Download a HOMEFORGE backup for recovery.');
         const saved = await store.ensure(w, r);
-        if (alive) { workspaceId = w; renovationId = r; zoneName = renovation.name; capture = saved; }
+        if (alive) { workspaceId = w; renovationId = r; zoneName = renovation.name; existingVariantId = renovation.existingVariantId; capture = saved; }
       } catch (reason) { if (alive) error = storageErrorMessage(reason); }
       finally { if (alive) loading = false; }
     })();
@@ -100,6 +111,19 @@
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = URL.createObjectURL(preview); previewName = item.name;
     } catch (reason) { error = storageErrorMessage(reason); }
+  }
+  async function recordDraftDimension() {
+    const dimension = draftDimensions.find(item => item.key === draftDimensionKey);
+    if (!dimension || !draftFeatureId || !reviewedEvidenceId) return;
+    saving = true; error = ''; notice = '';
+    try {
+      await store.addMeasurement(workspaceId, renovationId, { featureId: draftFeatureId, property: dimension.property,
+        enteredValue: dimension.valueCm, unit: 'cm', source: 'scan-derived', evidenceIds: [reviewedEvidenceId] });
+      capture = await store.load(workspaceId, renovationId);
+      notice = 'Draft dimension recorded with RoomPlan evidence. Review any correction in the Existing editor.';
+      draftDimensionKey = ''; draftFeatureId = '';
+    } catch (reason) { error = storageErrorMessage(reason); }
+    finally { saving = false; }
   }
 </script>
 
@@ -176,6 +200,17 @@
           <h2 class="font-semibold">RoomPlan draft from {capture.evidence.find(item => item.id === reviewedEvidenceId)?.name}</h2>
           <p class="mt-1 text-sm">{draft.floors.length} floors · {draft.floors.reduce((sum, floor) => sum + floor.walls.length, 0)} walls · {draft.floors.reduce((sum, floor) => sum + floor.doors.length, 0)} doors · {draft.floors.reduce((sum, floor) => sum + floor.windows.length, 0)} windows</p>
           <p class="mt-2 text-sm text-amber-800">Draft only. Existing Conditions were not changed. Review and protected acceptance are required before using imported geometry as the baseline.</p>
+          {#if draftDimensions.length && capture.features.length}
+            <form class="mt-4 grid gap-3 sm:grid-cols-3" onsubmit={event => { event.preventDefault(); void recordDraftDimension(); }}>
+              <label>RoomPlan dimension<select class="mt-1 block w-full rounded border p-2" bind:value={draftDimensionKey} required>
+                <option value="">Choose dimension</option>{#each draftDimensions as dimension}<option value={dimension.key}>{dimension.name}: {dimension.valueCm.toFixed(2)} cm</option>{/each}
+              </select></label>
+              <label>Matching Existing feature<select class="mt-1 block w-full rounded border p-2" bind:value={draftFeatureId} required>
+                <option value="">Choose reviewed match</option>{#each capture.features.filter(feature => feature.kind === draftDimensions.find(item => item.key === draftDimensionKey)?.kind && feature.bindings.some(binding => binding.variantId === existingVariantId)) as feature}<option value={feature.id}>{feature.label}</option>{/each}
+              </select></label>
+              <button class="self-end rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50" disabled={saving}>Record RoomPlan dimension</button>
+            </form>
+          {/if}
         </section>
       {/if}
       <button class="mt-5 text-sm font-semibold text-blue-700 underline" onclick={backup}>Download HOMEFORGE backup</button>

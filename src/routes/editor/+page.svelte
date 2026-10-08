@@ -17,6 +17,10 @@
   import { createHomeforgeStore } from '$lib/services/homeforge';
   import { createHomeforgeZoneStore } from '$lib/services/homeforgeZone';
   import type { HomeforgeZone } from '$lib/models/homeforgeZone';
+  import type { HomeforgeProposal } from '$lib/models/homeforgeProposal';
+  import { prepareDimensionProposal, acceptDimensionProposal } from '$lib/services/homeforgeProposal';
+  import { prepareNumericCommand } from '$lib/utils/homeforgeCommands';
+  import HomeforgeProposalReview from '$lib/components/HomeforgeProposalReview.svelte';
   import { refreshSnapshots } from '$lib/stores/versionHistory';
   import { autoSave, markClean, saveState, savingCopy } from '$lib/stores/saveStatus';
   import { createProjectFromRoomPlan, isRoomPlanJson } from '$lib/utils/roomplanImport';
@@ -81,6 +85,29 @@
   const homeforgeClient = createHomeforgeStore();
   const zoneClient = createHomeforgeZoneStore();
   let featureRegistry = $state<HomeforgeZone | null>(null);
+  let proposalDraft = $state<HomeforgeProposal | null>(null), proposalBusy = $state(false), proposalError = $state('');
+  let legendCommand = $state('');
+  function reviewMeasurement(measurementId: string) {
+    const project = get(currentProject);
+    if (!homeforgeContext || !featureRegistry || !project) return;
+    try { proposalDraft = prepareDimensionProposal(featureRegistry, project, homeforgeContext.variant.id, measurementId); proposalError = ''; }
+    catch (error) { navigationError = storageErrorMessage(error); }
+  }
+  function reviewCommand() {
+    const project = get(currentProject);
+    if (!homeforgeContext || !featureRegistry || !project) return;
+    try {
+      proposalDraft = prepareNumericCommand(featureRegistry, project, homeforgeContext.variant.id, homeforgeContext.variant.kind, legendCommand);
+      proposalError = ''; navigationError = null;
+    } catch (error) { navigationError = storageErrorMessage(error); }
+  }
+  async function acceptProposal() {
+    if (!proposalDraft) return;
+    proposalBusy = true; proposalError = '';
+    try { await acceptDimensionProposal(proposalDraft); proposalDraft = null; }
+    catch (error) { proposalError = storageErrorMessage(error); }
+    finally { proposalBusy = false; }
+  }
   async function loadFeatureRegistry() {
     if (!homeforgeContext) { featureRegistry = null; return; }
     try { featureRegistry = await zoneClient.load(homeforgeContext.workspaceId, homeforgeContext.renovationId); }
@@ -131,7 +158,7 @@
     const url = new URL(window.location.href);
     url.searchParams.set('id', project.id); url.searchParams.set('variant', variant.id);
     replaceState(url, page.state);
-    homeforgeContext = { ...context, variant }; selectedVariantId = variant.id;
+    homeforgeContext = { ...context, variant }; selectedVariantId = variant.id; proposalDraft = null; legendCommand = '';
     await loadFeatureRegistry();
     loadProject(project, protectedBaseline); markClean();
     showLayers = false; showUndoHistory = false; buildPanelOpen = false; printOpen = false; commandPaletteOpen = false;
@@ -317,6 +344,7 @@
       url.searchParams.delete('homeforge'); url.searchParams.delete('workspace'); url.searchParams.delete('renovation'); url.searchParams.delete('variant');
       homeforgeContext = null;
       featureRegistry = null;
+      proposalDraft = null;
       url.searchParams.set('id', project.id);
       replaceState(url, page.state);
     });
@@ -361,7 +389,7 @@
 {#if ready}
   <div class="h-screen flex flex-col overflow-hidden" style:--editor-top={homeforgeContext ? ($baselineProtection.projectId ? '12rem' : '9rem') : $baselineProtection.projectId ? '6rem' : '3rem'}>
     {#if homeforgeContext}
-      <nav aria-label="HOMEFORGE editor context" class="h-24 md:h-12 shrink-0 flex flex-col md:flex-row justify-center md:items-center gap-2 px-3 bg-slate-100 border-b border-slate-200 text-sm">
+      <nav aria-label="HOMEFORGE editor context" aria-busy={returning} class="h-24 md:h-12 shrink-0 flex flex-col md:flex-row justify-center md:items-center gap-2 px-3 bg-slate-100 border-b border-slate-200 text-sm">
         <div class="flex items-center gap-3 min-w-0 flex-1">
         <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={() => returnToRenovations()}>Return to renovations</button>
         <button class="shrink-0 text-blue-700 underline disabled:opacity-50" disabled={returning} onclick={() => returnToRenovations('zone')}>Back to zone</button>
@@ -415,13 +443,23 @@
           {/if}
         {/if}
         {#if homeforgeContext && featureRegistry && featureRegistry.features.length}
-          <aside aria-label="Feature legend" class="absolute bottom-4 left-4 z-10 max-h-40 max-w-56 overflow-auto rounded-lg border bg-white/95 p-3 text-xs shadow">
+          <aside aria-label="Feature legend" class="absolute bottom-4 left-4 z-30 max-h-40 max-w-56 overflow-auto rounded-lg border bg-white/95 p-3 text-xs shadow">
             <strong>Feature legend</strong>
             <ul class="mt-1 space-y-1">
               {#each featureRegistry.features as feature (feature.id)}
-                <li>{feature.label} · {feature.kind} · {feature.bindings.some(binding => binding.variantId === homeforgeContext!.variant.id) ? 'bound' : 'unbound'}</li>
+                <li>{feature.label} · {feature.kind} · {feature.bindings.some(binding => binding.variantId === homeforgeContext!.variant.id) ? 'bound' : 'unbound'}
+                  {#if homeforgeContext.variant.kind === 'existing'}
+                    {#each featureRegistry.measurements.filter(item => item.featureId === feature.id) as measurement (measurement.id)}
+                      <button class="block text-left text-blue-700 underline" onclick={() => reviewMeasurement(measurement.id)}>Review {measurement.property} observation</button>
+                    {/each}
+                  {/if}
+                </li>
               {/each}
             </ul>
+            <form class="mt-3 border-t pt-2" onsubmit={event => { event.preventDefault(); reviewCommand(); }}>
+              <label>Exact legend command<input class="mt-1 w-full rounded border p-1" bind:value={legendCommand} maxlength="300" disabled={returning} placeholder="D1 is 36 inches wide" /></label>
+              <button class="mt-1 text-blue-700 underline disabled:opacity-50" disabled={returning}>Review command</button>
+            </form>
           </aside>
         {/if}
       </div>
@@ -434,6 +472,9 @@
 
   {#if $protectionError}<p role="alert" class="fixed bottom-32 inset-x-4 z-[60] rounded-lg bg-amber-50 text-amber-900 px-3 py-2 text-sm shadow-lg">{$protectionError}</p>{/if}
   {#if navigationError}<p role="alert" class="fixed bottom-20 inset-x-4 z-[60] rounded-lg bg-red-50 text-red-800 px-3 py-2 text-sm shadow-lg">{navigationError}</p>{/if}
+  {#if proposalDraft}<HomeforgeProposalReview proposal={proposalDraft}
+    evidenceNames={proposalDraft.evidenceIds.map(id => featureRegistry?.evidence.find(item => item.id === id)?.name ?? 'Unavailable evidence')}
+    busy={proposalBusy} error={proposalError} onAccept={() => { void acceptProposal(); }} onCancel={() => { proposalDraft = null; }} />{/if}
 
   {#if correctionForm}
     <dialog use:modalDialog aria-label="Correct Existing Conditions" oncancel={event => { if (returning) event.preventDefault(); else correctionForm = false; }} class="m-auto max-w-[calc(100vw-2rem)] w-96 rounded-xl bg-white p-5 shadow-xl backdrop:bg-black/50">

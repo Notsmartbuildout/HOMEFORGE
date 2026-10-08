@@ -103,11 +103,17 @@ for (const width of [1440, 390]) test(`guided capture retains an original photo 
 });
 
 test('RoomPlan evidence opens a draft review without changing Existing', async ({ page }) => {
-  await page.goto('/'); await createWorkspace(page); await createRenovation(page);
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Entry', source.id);
   const before = await savedProjects(page);
   const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
   const renovation = workspace.renovationProjects[0];
   await page.getByRole('article', { name: renovation.name }).getByRole('link', { name: 'Open zone' }).click();
+  const element = page.getByLabel('Existing element');
+  await element.selectOption((await element.locator('option').filter({ hasText: 'door 1' }).getAttribute('value'))!);
+  await page.getByLabel('Feature label').fill('D1');
+  await page.getByRole('button', { name: 'Save feature' }).click();
   await page.getByRole('link', { name: 'Capture Existing Conditions' }).click();
   await page.getByRole('button', { name: 'Start capture visit' }).click();
   await page.getByLabel('Evidence type').selectOption('roomplan');
@@ -116,7 +122,69 @@ test('RoomPlan evidence opens a draft review without changing Existing', async (
   await page.getByRole('button', { name: 'Save evidence' }).click();
   await page.getByRole('button', { name: 'Review RoomPlan draft' }).click();
   await expect(page.getByRole('region', { name: 'RoomPlan draft review' })).toContainText('Draft only');
+  await page.getByLabel('RoomPlan dimension').selectOption((await page.getByLabel('RoomPlan dimension').locator('option').filter({ hasText: 'door 1 width' }).getAttribute('value'))!);
+  await page.getByLabel('Matching Existing feature').selectOption({ label: 'D1' });
+  await page.getByRole('button', { name: 'Record RoomPlan dimension' }).click();
+  await expect(page.getByRole('status')).toContainText('Draft dimension recorded');
+  const zones = Object.values(await storedRecords(page, 'homeforgeZones')).map(raw => JSON.parse(raw));
+  expect(zones[0].measurements[0]).toMatchObject({ source: 'scan-derived', property: 'door.width', evidenceIds: [zones[0].evidence[0].id] });
+  await page.getByRole('link', { name: 'Zone overview' }).click();
+  await page.getByRole('link', { name: 'Open Existing Conditions' }).click();
+  await page.getByRole('button', { name: 'Review door.width observation' }).click();
+  const review = page.getByRole('dialog', { name: 'Review Existing correction proposal' });
+  await expect(review).toContainText('scan-derived');
+  await expect(review).toContainText('handoff-roomplan.json');
+  await review.getByRole('button', { name: 'Cancel' }).click();
   expect(await savedProjects(page)).toEqual(before);
+});
+
+test('manual dimension proposal previews, cancels and saves only in correction mode', async ({ page }) => {
+  const source: any = JSON.parse(JSON.parse(await readFile('tests/fixtures/library-backup.json', 'utf8')).projects['qa-library-restore']);
+  await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
+  await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Entry', source.id);
+  await page.getByRole('article', { name: 'Entry' }).getByRole('link', { name: 'Open zone' }).click();
+  const element = page.getByLabel('Existing element');
+  await element.selectOption((await element.locator('option').filter({ hasText: 'door 1' }).getAttribute('value'))!);
+  await page.getByLabel('Feature label').fill('D1');
+  await page.getByRole('button', { name: 'Save feature' }).click();
+  await page.getByLabel('Measurement property').selectOption('door.width');
+  await page.getByLabel('Measured value').fill('36');
+  await page.getByLabel('Measurement unit').selectOption('in');
+  await page.getByRole('button', { name: 'Save measurement' }).click();
+  const before = (await savedProjects(page))[source.id].floors[0].doors[0].width;
+  await page.getByRole('link', { name: 'Open Existing Conditions' }).click();
+  await page.getByRole('button', { name: 'Review door.width observation' }).click();
+  const review = page.getByRole('dialog', { name: 'Review Existing correction proposal' });
+  await expect(review).toContainText('Proposed geometry');
+  await review.getByRole('button', { name: 'Cancel' }).click();
+  expect((await savedProjects(page))[source.id].floors[0].doors[0].width).toBe(before);
+  await page.getByLabel('Exact legend command').fill('D1 is 36 inches wide.');
+  await page.getByRole('button', { name: 'Review command' }).click();
+  await review.getByRole('button', { name: 'Accept and save correction' }).click();
+  await expect(review.getByRole('alert')).toContainText('correction mode');
+  await review.getByRole('button', { name: 'Cancel' }).click();
+  expect((await savedProjects(page))[source.id].floors[0].doors[0].width).toBe(before);
+  await page.getByRole('button', { name: 'Begin correction', exact: true }).click();
+  await page.getByRole('button', { name: 'Start correction', exact: true }).click();
+  await page.getByRole('button', { name: 'Review door.width observation' }).click();
+  await review.getByRole('button', { name: 'Accept and save correction' }).click();
+  await expect(review).not.toBeVisible();
+  await expect.poll(async () => (await savedProjects(page))[source.id].floors[0].doors[0].width).toBe(91.44);
+  await page.getByRole('button', { name: 'Clone to option', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Create design option' }).getByRole('button', { name: 'Create option' }).click();
+  await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toContainText('Option A');
+  const metadata: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const option = metadata.renovationProjects[0].variants.find((item: any) => item.kind === 'option');
+  await expect(page.getByLabel('Design variant')).toHaveValue(option.id);
+  await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toHaveAttribute('aria-busy', 'false');
+  await page.getByLabel('Exact legend command').fill('D1 is 40 inches wide.');
+  await expect(page.getByLabel('Exact legend command')).toHaveValue('D1 is 40 inches wide.');
+  await page.getByRole('button', { name: 'Review command' }).click();
+  const optionReview = page.getByRole('dialog', { name: 'Review option edit proposal' });
+  await optionReview.getByRole('button', { name: 'Accept and save edit' }).click();
+  await expect(optionReview).not.toBeVisible();
+  await expect.poll(async () => (await savedProjects(page))[option.projectId].floors[0].doors[0].width).toBe(101.6);
+  expect((await savedProjects(page))[source.id].floors[0].doors[0].width).toBe(91.44);
 });
 
 test('zone overview does not open missing or unrelated geometry', async ({ page }) => {

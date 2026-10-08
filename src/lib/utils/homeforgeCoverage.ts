@@ -25,7 +25,7 @@ export function coveragePrompts(zone: HomeforgeZone): CoveragePrompt[] {
       priority, reason, met: zone.measurements.some(item => item.featureId === feature.id && item.property === property) })));
 }
 
-export function geometryValue(zone: HomeforgeZone, measurement: ZoneMeasurement, project: Project, variantId: string): number | null {
+export function geometryValue(zone: HomeforgeZone, measurement: Pick<ZoneMeasurement, 'featureId' | 'property' | 'source' | 'dependencies'>, project: Project, variantId: string): number | null {
   const feature = zone.features.find(item => item.id === measurement.featureId);
   if (!feature) return null;
   const binding = feature.bindings.find(item => item.variantId === variantId);
