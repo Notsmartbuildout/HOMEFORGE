@@ -14,9 +14,9 @@
 - M3: direct manipulation and concise numeric property editing.
 - M3.1: zone overview and editor return path implemented on `foundation-remediation`. The existing wall, opening and stair numeric controls and canvas manipulation were inspected and reused; no duplicate editor was added. Type check, 1,260 unit tests, production build and 18 relevant browser cases across Chromium/Firefox/WebKit pass. Guided capture, persistent legend identity and comparison remain planned. See M3_M6_DESIGN.md and M3_M6_IMPLEMENTATION_PLAN.md.
 - M4: complete at `4f41a33`. Additive IndexedDB v3 zone/evidence stores, guided original-file capture, HOMEFORGE backup v2, v1 restore compatibility, byte-exact restore/recovery, feature identities and option bindings, measurement coverage/verification, legend UI, and RoomPlan draft review. Final gate: 1,282 unit tests, zero type-check diagnostics, production build and nine relevant browser cases across Chromium/Firefox/WebKit. See HANDOFF.md and M3_M6_IMPLEMENTATION_PLAN.md.
-- M5: guarded local proposal review and deterministic numeric legend commands, using Existing correction mode and shared editor mutations.
+- M5: guarded local proposal review and deterministic numeric legend commands complete at `9668139` plus the October 8 option-transition fix. Gate: 1,287 unit tests, zero type-check diagnostics, production build and six relevant browser cases across Chromium/Firefox/WebKit.
 - M6: front-entry/stair comparison, provenance-aware export, pilot and release audit.
 
-Next: implement M5 from M3_M6_DESIGN.md and M3_M6_IMPLEMENTATION_PLAN.md. An initial external-service inventory remains in WINDOWS_BASELINE.md; include deliberate offline/external-service review before a homeowner release. Retain M0 evidence and use relevant regression gates for future changes.
+Next: implement M6 from M3_M6_DESIGN.md and M3_M6_IMPLEMENTATION_PLAN.md. An initial external-service inventory remains in WINDOWS_BASELINE.md; include deliberate offline/external-service review before a homeowner release. Retain M0 evidence and use relevant regression gates for future changes.
 
 After practical validation: optional estimates, AI commands over structured state, shared spaces and an optional native capture companion.

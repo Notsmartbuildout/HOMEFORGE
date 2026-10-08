@@ -1,6 +1,6 @@
 # Handoff
 
-Owner: Jesse Lawson (`jessenlawson-cell`). Updated: 2026-10-05. Final Git repository and application: `C:\DEVELOPMENT\HOMEFORGE`.
+Owner: Jesse Lawson (`jessenlawson-cell`). Updated: 2026-10-08. Final Git repository and application: `C:\DEVELOPMENT\HOMEFORGE`.
 
 ## Current state
 
@@ -12,11 +12,13 @@ M4 capture and backup/restore added IndexedDB v3 zone/evidence stores, a guided 
 
 M4 is complete at checkpoint `4f41a33`. It adds persisted feature labels/relations, reviewed binding of older options, per-feature measurements, coverage prompts and a user-declared sufficient state, relevant-geometry verification, calculated nominal stair riser height, an editor legend, evidence links, derived image previews, and RoomPlan draft review. Removing an option also removes its bindings atomically. Restore keeps a zone with an unmatched floor/element binding in recovery; existing projects and workspace metadata remain available. RoomPlan review does not replace Existing Conditions. Verification shows the saved geometry value and whether it differs from the observation; it is not an engineering guarantee. Final October 5 gates on the committed code: 1,282 unit tests in 134 files, `npm run check` with zero errors/warnings, production build, and nine relevant browser cases across Chromium, Firefox and WebKit. The owner requested fewer repeated tests, so broader browser suites were not rerun.
 
+M5 proposal review and exact numeric legend commands were committed as `9668139` and are included in `origin/main`. Manual measurements and reviewed RoomPlan dimensions produce previews; acceptance checks current saved project/zone state, Existing correction permission, evidence availability and exact target ownership before using shared editor mutations, one undo group and save. Unsupported commands and photo-only scan claims are rejected. An October 8 WebKit transition fix keeps command entry unavailable while switching options. Its gate passed 1,287 unit tests in 136 files, zero type-check errors/warnings, production build and six proposal/RoomPlan browser cases across Chromium, Firefox and WebKit. M6 comparison, provenance export and front-entry/stair pilot remain.
+
 Read [MILESTONE_AUDIT.md](MILESTONE_AUDIT.md), [M2_5_RESILIENCE.md](M2_5_RESILIENCE.md) and [M2_4_BASELINE_PROTECTION.md](M2_4_BASELINE_PROTECTION.md) for earlier APIs, invariants and evidence. Prior M2.5 gates: 1,260 unit tests in 132 files, 60 browser cases across three engines, zero type-check errors/warnings, production build passed. Logs are retained in EVIDENCE; M0 evidence below remains historical. The original `main` snapshot is older; use `foundation-remediation` for subsequent development.
 
 
-- Public fork: https://github.com/jessenlawson-cell/HOMEFORGE
-- `origin`: https://github.com/jessenlawson-cell/HOMEFORGE.git
+- Historical public fork: https://github.com/jessenlawson-cell/HOMEFORGE
+- Current `origin`: https://github.com/Notsmartbuildout/HOMEFORGE.git (verified 2026-10-08); `foundation-remediation` has no remote branch and `9668139` is an ancestor of `origin/main`.
 - `upstream`: https://github.com/laanlabs/openPlan3D.git
 - Verified fork parent: `laanlabs/openPlan3D`; default branch: `main`.
 - Original upstream commit: `d68cadf703578f2cd3a7c77f820e18d342580c32`.
@@ -48,6 +50,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-Continue from [M3_M6_DESIGN.md](M3_M6_DESIGN.md) and [M3_M6_IMPLEMENTATION_PLAN.md](M3_M6_IMPLEMENTATION_PLAN.md). M1.1–M2.5, M3.1 and M4 are complete; do not repeat them. Start M5 with proposal review and deterministic numeric legend commands. Keep the owner's reduced-testing preference: run focused checks during development and one broad gate at a milestone boundary. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes.
+Continue from [M3_M6_DESIGN.md](M3_M6_DESIGN.md) and [M3_M6_IMPLEMENTATION_PLAN.md](M3_M6_IMPLEMENTATION_PLAN.md). M1.1–M2.5, M3.1, M4 and M5 are complete; do not repeat them. Next implement M6 comparison, provenance-aware dimension export and a front-entry/stair pilot. Keep the owner's reduced-testing preference: run focused checks during development and one broad gate at a milestone boundary. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes. Resolve the changed fork remote before publication.
 
 Future controls must use shared mutation/write guards. Deliberate adoption can share a baseline ID across renovations; correction affects all those references. Measurement provenance, native capture, AI, structural/code calculations and deployment remain future decisions. This verified foundation is ready for further UI development; universal bug-free or fully offline behavior has not been claimed.

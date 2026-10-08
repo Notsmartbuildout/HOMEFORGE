@@ -176,7 +176,7 @@ test('manual dimension proposal previews, cancels and saves only in correction m
   const metadata: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
   const option = metadata.renovationProjects[0].variants.find((item: any) => item.kind === 'option');
   await expect(page.getByLabel('Design variant')).toHaveValue(option.id);
-  await expect(page.getByRole('navigation', { name: 'HOMEFORGE editor context' })).toHaveAttribute('aria-busy', 'false');
+  await expect(page.getByLabel('Exact legend command')).toBeEnabled();
   await page.getByLabel('Exact legend command').fill('D1 is 40 inches wide.');
   await expect(page.getByLabel('Exact legend command')).toHaveValue('D1 is 40 inches wide.');
   await page.getByRole('button', { name: 'Review command' }).click();

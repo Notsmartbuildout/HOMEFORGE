@@ -143,6 +143,7 @@
   }
 
   async function openVariant(variantId: string) {
+    legendCommand = '';
     const context = homeforgeContext;
     const before = get(currentProject);
     const variant = context?.variants.find(v => v.id === variantId);
@@ -158,7 +159,7 @@
     const url = new URL(window.location.href);
     url.searchParams.set('id', project.id); url.searchParams.set('variant', variant.id);
     replaceState(url, page.state);
-    homeforgeContext = { ...context, variant }; selectedVariantId = variant.id; proposalDraft = null; legendCommand = '';
+    homeforgeContext = { ...context, variant }; selectedVariantId = variant.id; proposalDraft = null;
     await loadFeatureRegistry();
     loadProject(project, protectedBaseline); markClean();
     showLayers = false; showUndoHistory = false; buildPanelOpen = false; printOpen = false; commandPaletteOpen = false;
@@ -456,10 +457,12 @@
                 </li>
               {/each}
             </ul>
-            <form class="mt-3 border-t pt-2" onsubmit={event => { event.preventDefault(); reviewCommand(); }}>
-              <label>Exact legend command<input class="mt-1 w-full rounded border p-1" bind:value={legendCommand} maxlength="300" disabled={returning} placeholder="D1 is 36 inches wide" /></label>
-              <button class="mt-1 text-blue-700 underline disabled:opacity-50" disabled={returning}>Review command</button>
-            </form>
+            {#if !returning}
+              <form class="mt-3 border-t pt-2" onsubmit={event => { event.preventDefault(); reviewCommand(); }}>
+                <label>Exact legend command<input class="mt-1 w-full rounded border p-1" bind:value={legendCommand} maxlength="300" placeholder="D1 is 36 inches wide" /></label>
+                <button class="mt-1 text-blue-700 underline">Review command</button>
+              </form>
+            {/if}
           </aside>
         {/if}
       </div>
