@@ -147,7 +147,7 @@ M5 landed in `9668139`; the option-transition input fix and October 8 gate are r
 **Files:** Add a non-sensitive front-entry/stair fixture or manual pilot checklist in `HOMEFORGE_DOCS`; update `ROADMAP.md`, `ARCHITECTURE.md`, `HANDOFF.md` and milestone audit only with verified outcomes.
 
 - [x] Run a non-sensitive software sample with context/focus capture, stair/opening dimensions, two options, 2D/elevation/3D inspection, CSV/backup export and restore, and protected correction checks. The owner's real measurements begin after the software gate, per October 8 clarification.
-- [x] Run the relevant regression gates and deliberate offline/external-service review; record exact passes and limitations in `FRONT_ENTRY_STAIR_PILOT.md`, `HANDOFF.md` and `MILESTONE_AUDIT.md`. Publication is separate because current `origin` differs from the historical owner fork.
+- [x] Run the relevant regression gates and deliberate offline/external-service review; record exact passes and limitations in `FRONT_ENTRY_STAIR_PILOT.md`, `HANDOFF.md` and `MILESTONE_AUDIT.md`. The owner confirmed current `origin`, and M6 was pushed to `origin/foundation-remediation`.
 
 ## Execution order
 

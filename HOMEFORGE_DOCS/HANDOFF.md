@@ -4,7 +4,7 @@ Owner: Jesse Lawson (`jessenlawson-cell`). Updated: 2026-10-08. Final Git reposi
 
 ## Current state
 
-The authorized Windows setup, known-error remediation and M1.1–M2.5 development sequence are complete. The historical checkpoints were published; the current `foundation-remediation` branch has no remote counterpart. M2.4 checkpoint: `bbd01528ea88a90b0b844241fb6f692c9618aa7e`. M2.5 completed safe option removal, exact-byte damaged-metadata archival and the resilience audit. Hosted deployment remains out of scope.
+The authorized Windows setup, known-error remediation and M1.1–M2.5 development sequence are complete. Current M3–M6 work is published on `origin/foundation-remediation`. M2.4 checkpoint: `bbd01528ea88a90b0b844241fb6f692c9618aa7e`. M2.5 completed safe option removal, exact-byte damaged-metadata archival and the resilience audit. Hosted deployment remains out of scope.
 
 M3.1 added a Renovation Zone overview around the existing `RenovationProject`, with exact Existing/option opening, recovery messages and a save-before-return editor link. No schema or database migration was made. The inherited numeric wall/opening/stair controls and direct manipulation were reused. Gates for this slice: 1,260 unit tests, zero type-check errors/warnings, production build and 18 relevant browser cases across Chromium, Firefox and WebKit passed. `M3_M6_DESIGN.md` and `M3_M6_IMPLEMENTATION_PLAN.md` hold the working design and execution sequence.
 
@@ -16,13 +16,13 @@ M5 proposal review and exact numeric legend commands were committed as `9668139`
 
 M6 adds saved feature and dimension comparison to the zone page, with reviewed identity relationships, current/stale observation status and a CSV containing value, unit, source, date and evidence filename. It distinguishes unbound and missing elements rather than inventing an option measurement. A non-sensitive front-entry/stair sample covered context/focus capture, key dimensions, two independent options, changed Option A stair width, 2D/elevation/3D inspection, CSV, backup and restore. Normal sample use made no external HTTP requests. A 390 px case confirmed the existing stair numeric control is reachable and Existing remains protected. October 8 gate: 1,288 unit tests in 137 files, zero type-check errors/warnings, production build and nine focused browser cases across Chromium, Firefox and WebKit. See `FRONT_ENTRY_STAIR_PILOT.md`. Real house measurements start when the owner uses the ready software.
 
-Read [MILESTONE_AUDIT.md](MILESTONE_AUDIT.md), [M2_5_RESILIENCE.md](M2_5_RESILIENCE.md) and [M2_4_BASELINE_PROTECTION.md](M2_4_BASELINE_PROTECTION.md) for earlier APIs, invariants and evidence. Prior M2.5 gates: 1,260 unit tests in 132 files, 60 browser cases across three engines, zero type-check errors/warnings, production build passed. Logs are retained in EVIDENCE; M0 evidence below remains historical. Current local work is on `foundation-remediation`; `origin/main` contains M5 through `9668139` but not the later local verification and M6 work.
+Read [MILESTONE_AUDIT.md](MILESTONE_AUDIT.md), [M2_5_RESILIENCE.md](M2_5_RESILIENCE.md) and [M2_4_BASELINE_PROTECTION.md](M2_4_BASELINE_PROTECTION.md) for earlier APIs, invariants and evidence. Prior M2.5 gates: 1,260 unit tests in 132 files, 60 browser cases across three engines, zero type-check errors/warnings, production build passed. Logs are retained in EVIDENCE; M0 evidence below remains historical. Current work is on `foundation-remediation`; `origin/main` contains M5 through `9668139` but not the later M5 verification fix or M6.
 
 
 - Historical public fork: https://github.com/jessenlawson-cell/HOMEFORGE
-- Current `origin`: https://github.com/Notsmartbuildout/HOMEFORGE.git (verified 2026-10-08); `foundation-remediation` has no remote branch and `9668139` is an ancestor of `origin/main`.
+- Current `origin`: https://github.com/Notsmartbuildout/HOMEFORGE.git (confirmed by the owner on 2026-10-08); `foundation-remediation` was pushed with M6 checkpoint `b8899d8`. `origin/main` includes M5 through `9668139` but not the later branch commits.
 - `upstream`: https://github.com/laanlabs/openPlan3D.git
-- Historical fork parent: `laanlabs/openPlan3D`; current `origin` ownership should be confirmed before another push.
+- Historical fork parent: `laanlabs/openPlan3D`; the owner confirmed the current `origin` as the publication target.
 - Original upstream commit: `d68cadf703578f2cd3a7c77f820e18d342580c32`.
 - Preserved baseline tag: `homeforge-upstream-baseline-2026-10-04`.
 - Remediation checkpoint: `homeforge-foundation-ready-2026-10-04`.
@@ -52,6 +52,6 @@ No keys, paid services or hosted deployment were configured. Optional inherited 
 
 ## Next action
 
-M1.1–M2.5 and M3–M6 have passed their specified software gates. The next product action is the owner's first real front-entry/stair mapping session using [FRONT_ENTRY_STAIR_PILOT.md](FRONT_ENTRY_STAIR_PILOT.md), beginning with a HOMEFORGE backup. Keep the owner's reduced-testing preference for future changes. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes. Resolve the changed fork remote before publication.
+M1.1–M2.5 and M3–M6 have passed their specified software gates. The next product action is the owner's first real front-entry/stair mapping session using [FRONT_ENTRY_STAIR_PILOT.md](FRONT_ENTRY_STAIR_PILOT.md), beginning with a HOMEFORGE backup. Use the `foundation-remediation` checkout; remote `main` has not received M6. Keep the owner's reduced-testing preference for future changes. Existing Conditions is protected, intentional correction is explicit and session-only, options are independent, switches preserve latest edits, and removal/recovery retain geometry and damaged bytes.
 
 Future controls must use shared mutation/write guards. Deliberate adoption can share a baseline ID across renovations; correction affects all those references. Native capture, AI, structural/code calculations and deployment remain future decisions. The software is ready for the owner's first local mapping session; universal bug-free or fully offline behavior has not been claimed.
