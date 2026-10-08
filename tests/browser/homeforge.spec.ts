@@ -207,6 +207,8 @@ test('sample front entry and stair workflow compares two options and restores ca
     depth: 300, riserCount: 14, direction: 'up', stairType: 'straight' });
   await page.addInitScript(project => { localStorage.setItem('floorplan_projects', JSON.stringify({ [project.id]: JSON.stringify(project) })); }, source);
   await page.goto('/'); await createWorkspace(page); await createRenovation(page, 'Sample front entry and stairs', source.id);
+  const workspace: any = JSON.parse(Object.values(await storedRecords(page, 'homeforgeWorkspaces'))[0]);
+  const renovation = workspace.renovationProjects[0];
   await page.getByRole('article', { name: 'Sample front entry and stairs' }).getByRole('link', { name: 'Open zone' }).click();
   for (const [element, label] of [['Ground Floor / door 1', 'D1'], ['Ground Floor / stair 1', 'S1']]) {
     await page.getByLabel('Existing element').selectOption({ label: element });
@@ -281,6 +283,29 @@ test('sample front entry and stair workflow compares two options and restores ca
   await (await chooser).setFiles({ name: 'sample-homeforge.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
   await dialog.getByRole('button', { name: 'Restore as copies' }).click();
   await expect(dialog).toContainText('1 HOMEFORGE workspace restored');
+  await page.goto(`/zone?workspace=${workspace.id}&renovation=${renovation.id}`);
+  await expect(page.getByRole('region', { name: 'Compare and export' })).toContainText('current');
+  await page.evaluate(async id => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('openplan3d-local');
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('projects', 'readwrite'), store = tx.objectStore('projects'), read = store.get(id);
+      read.onsuccess = () => {
+        const project = JSON.parse(read.result);
+        project.floors[0].doors[0].width = 96;
+        store.put(JSON.stringify(project), id);
+      };
+      tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  }, source.id);
+  const refreshedDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download dimension comparison CSV' }).click();
+  const refreshedCsv = await readFile((await (await refreshedDownload).path())!, 'utf8');
+  expect(refreshedCsv).toContain('"stale"');
+  expect(refreshedCsv).toContain('"96","bound"');
   expect(externalRequests).toEqual([]);
 });
 

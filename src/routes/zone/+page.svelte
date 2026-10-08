@@ -88,12 +88,27 @@
     try { await downloadHomeforgeBackup(); error = ''; }
     catch (reason) { error = storageErrorMessage(reason); }
   }
-  function downloadComparison() {
-    if (!zone || !comparison) return;
-    const url = URL.createObjectURL(new Blob([comparisonCsv(zone.name, comparison)], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url; link.download = `${zone.name.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}-dimensions.csv`;
-    link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  async function downloadComparison() {
+    if (!workspace || !zone) return;
+    saving = true; error = '';
+    try {
+      const data = await readHomeforgeDashboard();
+      const current = data.workspaces.find(item => item.id === workspace!.id)?.renovationProjects.find(item => item.id === zone!.id);
+      const latest = await zoneStore.load(workspace.id, zone.id);
+      if (!current || !latest) throw new Error('The saved zone changed or is unavailable. Reload before exporting.');
+      const projects: Record<string, Project | null> = {};
+      await Promise.all(current.variants.map(async variant => {
+        try { projects[variant.projectId] = await projectStore.load(variant.projectId); }
+        catch { projects[variant.projectId] = null; }
+      }));
+      const url = URL.createObjectURL(new Blob([comparisonCsv(current.name, compareZone(latest, current, projects))], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url; link.download = `${current.name.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}-dimensions.csv`;
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      zone = current; capture = latest; comparisonProjects = projects; status = data.projectStatus;
+      existingProject = projects[current.variants.find(item => item.id === current.existingVariantId)!.projectId];
+    } catch (reason) { error = storageErrorMessage(reason); }
+    finally { saving = false; }
   }
   async function saveFeature() {
     const element = elements.find(item => item.key === elementKey);
@@ -335,7 +350,7 @@
               <tbody>{#each comparison.dimensions as dimension}<tr><th class="border p-2 font-medium">{dimension.feature} · {dimension.property}</th><td class="border p-2">{dimension.observed} {dimension.unit}</td><td class="border p-2">{dimension.source} · {dimension.recordedAt} · {dimension.status}{#if dimension.evidence}<br />{dimension.evidence}{/if}</td>{#each dimension.values as value}<td class="border p-2">{value === null ? '—' : value.toFixed(2)}</td>{/each}</tr>{/each}</tbody>
             </table>
           </div>
-          <button class="mt-4 font-semibold text-blue-700 underline disabled:opacity-50" disabled={!comparison.dimensions.length} onclick={downloadComparison}>Download dimension comparison CSV</button>
+          <button class="mt-4 font-semibold text-blue-700 underline disabled:opacity-50" disabled={saving || !comparison.dimensions.length} onclick={() => { void downloadComparison(); }}>Download dimension comparison CSV</button>
           <p class="mt-1 text-xs text-slate-600">CSV contains saved dimensions and provenance, not original evidence files or complete plans. Use HOMEFORGE backup for those.</p>
         </section>
       {/if}
